@@ -5,7 +5,7 @@
     python agent.py --profiel agent      # ander profiel (agent, agent_spot, agent_rustig, ...)
     python agent.py --check              # alleen voorcontroles + status van een draaiende agent (heartbeat), daarna stoppen
     python agent.py --backtest 2023-01-01 2026-10-01   # agent-profiel doorrekenen op dagdata
-    python agent.py --dashboard          # ook het dashboard starten op http://localhost:8000
+    python agent.py --dashboard          # ook het dashboard starten op http://localhost:8001
 
 Fail-safes (allemaal ook actief in het dashboard):
   - noodstop: account X% onder zijn top -> alles dicht, 14 dagen pauze, daarna halve inzet tot een nieuwe top
@@ -81,7 +81,7 @@ def main():
     ap.add_argument('--check', action='store_true', help='alleen voorcontroles en status')
     ap.add_argument('--backtest', nargs='*', metavar='DATUM', help='backtest op dagdata: [start] [eind]')
     ap.add_argument('--dashboard', action='store_true', help='ook het dashboard starten')
-    ap.add_argument('--poort', type=int, default=8000)
+    ap.add_argument('--poort', type=int, default=8001)
     a = ap.parse_args()
 
     if a.backtest is not None:

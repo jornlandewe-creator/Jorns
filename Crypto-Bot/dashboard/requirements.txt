@@ -1,5 +1,6 @@
 ccxt>=4.0
 pandas>=2.0
 numpy>=1.26
-numba>=0.59
 flask>=3.0
+# optioneel (sneller bij backtests van de oude profielen); de bot werkt ook zonder
+numba>=0.59; python_version < "3.14"

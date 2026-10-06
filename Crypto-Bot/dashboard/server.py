@@ -1,4 +1,4 @@
-"""Dashboard-server. Start met:  python server.py   en open http://localhost:8000
+"""Dashboard-server. Start met:  python server.py   en open http://localhost:8001
 
 Draait alleen op je eigen computer (127.0.0.1). API keys en Telegram-token blijven lokaal in config.json.
 
@@ -649,9 +649,35 @@ def autostart():
         start_worker(c)
 
 
-if __name__ == '__main__':
-    log(f'Dashboard gestart, versie {VERSION}'); print('\n  Dashboard: http://localhost:8000\n')
+DEFAULT_PORT = 8001
+
+
+def free_port(start, host='127.0.0.1', tries=10):
+    """Eerste vrije poort vanaf start (de gewenste poort kan bezet zijn door een vorige bot of een ander programma)."""
+    import socket
+    for p in range(start, start + tries):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sk:
+            sk.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try: sk.bind((host, p)); return p
+            except OSError: continue
+    return start
+
+
+def main():
+    import sys
+    if sys.version_info < (3, 10):
+        print(f'Python {sys.version.split()[0]} is te oud: installeer Python 3.11 of nieuwer (python.org).'); sys.exit(1)
+    want = int(os.getenv('PORT') or (sys.argv[1] if len(sys.argv) > 1 and sys.argv[1].isdigit() else DEFAULT_PORT))
+    port = free_port(want)
+    if port != want: print(f'  Poort {want} is bezet (draait de bot al?), ik gebruik poort {port}')
+    log(f'Dashboard gestart, versie {VERSION}, poort {port}'); print(f'\n  Dashboard: http://localhost:{port}\n  Stoppen: Ctrl+C\n', flush=True)
+    try: open(os.path.join(HERE, 'poort.txt'), 'w').write(str(port))        # startbestanden lezen dit om de browser te openen
+    except Exception: pass
     threading.Thread(target=supervisor, daemon=True).start()
     threading.Thread(target=news_loop, daemon=True).start()
     autostart()
-    app.run(host='127.0.0.1', port=int(os.getenv('PORT', 8000)), debug=False, threaded=True)
+    app.run(host='127.0.0.1', port=port, debug=False, threaded=True, use_reloader=False)
+
+
+if __name__ == '__main__':
+    main()

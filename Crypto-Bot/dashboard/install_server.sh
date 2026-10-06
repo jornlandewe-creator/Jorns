@@ -6,8 +6,8 @@
 #   bash install_server.sh
 #
 # Dashboard bekijken vanaf je eigen computer (de bot is alleen op de server zelf bereikbaar, dat is veilig):
-#   ssh -L 8000:localhost:8000 ubuntu@IP-VAN-JE-SERVER
-#   en open dan http://localhost:8000 in je browser.
+#   ssh -L 8001:localhost:8001 ubuntu@IP-VAN-JE-SERVER
+#   en open dan http://localhost:8001 in je browser.
 set -e
 cd "$(dirname "$0")"
 DIR="$(pwd)"
@@ -61,6 +61,7 @@ ExecStart=$DIR/.venv/bin/python $DIR/server.py
 Restart=always
 RestartSec=10
 Environment=PYTHONUNBUFFERED=1
+Environment=PORT=8001
 
 [Install]
 WantedBy=multi-user.target
@@ -85,7 +86,7 @@ if ! systemctl is-active --quiet crypto-bot.service; then
   cat > "$DIR/run_loop.sh" <<EOL
 #!/bin/bash
 cd "$DIR"
-while true; do .venv/bin/python server.py >> "$DIR/bot.log" 2>&1; sleep 10; done
+while true; do PORT=8001 .venv/bin/python server.py >> "$DIR/bot.log" 2>&1; sleep 10; done
 EOL
   chmod +x "$DIR/run_loop.sh"
   (crontab -l 2>/dev/null | grep -v run_loop.sh; echo "@reboot $DIR/run_loop.sh") | crontab -
@@ -96,6 +97,7 @@ fi
 if systemctl is-active --quiet crypto-bot.service || pgrep -f ".venv/bin/python server.py" >/dev/null; then
   echo ""
   echo "Klaar. De bot draait. Versie: $(cat "$DIR/VERSION" 2>/dev/null || echo onbekend)"
+  echo "Dashboard: http://localhost:8001 (vanaf je eigen computer: ssh -L 8001:localhost:8001 gebruiker@server)"
   echo "Logboek: journalctl -u crypto-bot -f   (of: tail -f $DIR/bot.log)"
 else
   echo "De bot start niet. Laatste regels van het logboek:"

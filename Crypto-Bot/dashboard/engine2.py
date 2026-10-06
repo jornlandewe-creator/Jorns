@@ -3,7 +3,12 @@ Exits: signaal, stop loss (x ATR), take profit (x ATR), tijdstop (max candles). 
 Signaal op close, uitvoering op volgende open. SL en TP in dezelfde candle -> SL telt.
 """
 import numpy as np
-from numba import njit
+try:
+    from numba import njit
+except Exception:                                    # numba niet geinstalleerd of niet beschikbaar: pure Python (langzamer, zelfde uitkomst)
+    def njit(*a, **k):
+        if a and callable(a[0]): return a[0]
+        return lambda f: f
 
 
 @njit(cache=True)

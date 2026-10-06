@@ -5,7 +5,12 @@ Kosten 0.05% fee + 0.02% slippage over omzet. Universum: 10 munten van de datase
 """
 import itertools, sys
 import numpy as np, pandas as pd
-from numba import njit
+try:
+    from numba import njit
+except Exception:                                    # numba niet geinstalleerd of niet beschikbaar: pure Python (langzamer, zelfde uitkomst)
+    def njit(*a, **k):
+        if a and callable(a[0]): return a[0]
+        return lambda f: f
 from multiprocessing import Pool
 
 COINS = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'LINK', 'DOT']

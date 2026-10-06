@@ -3,7 +3,9 @@
 ## Starten
 1. Installeer Python 3.11 of nieuwer (python.org). Vink op Windows "Add Python to PATH" aan.
 2. Windows: dubbelklik `start_windows.bat`. Mac: dubbelklik `start_mac.command` (eerste keer: rechtsklik > Open).
-3. De eerste keer worden de onderdelen geinstalleerd (paar minuten). Daarna opent het dashboard op http://localhost:8000
+3. De eerste keer worden de onderdelen geinstalleerd (paar minuten). Daarna opent het dashboard op http://localhost:8001
+   (is die poort bezet, dan pakt de bot de eerstvolgende vrije poort en zet hij die in het venster en in poort.txt).
+   Linux: `bash start_linux.sh`. Start hij niet, zie "Als hij niet start" hieronder.
 4. Optioneel (Windows): dubbelklik `autostart_windows.bat`, dan start de bot vanzelf als je inlogt.
 
 Laat de computer aan staan; de bot handelt alleen terwijl hij draait. Op de Mac houdt het startbestand
@@ -145,12 +147,29 @@ Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:
 python agent.py --check                 # voorcontroles (keys, saldo, munten op de exchange, koersbron, Telegram) en de heartbeat
 python agent.py --paper                 # paper op live koersen, niets wordt echt gekocht
 python agent.py --live                  # echte orders (vereist keys en risico_akkoord in config.json)
-python agent.py --dashboard             # agent plus dashboard op http://localhost:8000
+python agent.py --dashboard             # agent plus dashboard op http://localhost:8001
 python agent.py --backtest 2023-01-01   # het agent-profiel doorrekenen op dagdata vanaf een datum
 python backtest_agent.py                # alle agent-profielen 2018 - sep 2026
 ```
 Stoppen met Ctrl+C: open posities blijven staan en de stand is opgeslagen; bij de volgende start gaat hij verder.
 De instellingen (profiel, modus, keys, Telegram) staan in `config.json` en zijn ook via het dashboard in te stellen.
+
+## Als hij niet start
+Open een terminal (Windows: cmd, Mac: Terminal) in de map `dashboard` en voer uit:
+```
+python3 -m venv .venv                      (Windows: python -m venv .venv)
+.venv/bin/python -m pip install -r requirements.txt    (Windows: .venv\Scripts\python -m pip install -r requirements.txt)
+.venv/bin/python server.py                 (Windows: .venv\Scripts\python server.py)
+```
+De laatste regels in het venster zeggen wat er mis is. De meest voorkomende oorzaken:
+- **"Python niet gevonden" / "python is not recognized"**: installeer Python 3.11 of nieuwer van python.org; op Windows "Add Python to PATH" aanvinken en de computer herstarten.
+- **Poort bezet** ("Address already in use"): een vorige bot draait nog. De bot pakt zelf de volgende vrije poort (staat in het venster en in `poort.txt`).
+  Wil je een vaste andere poort: `PORT=8002 python server.py` of `python server.py 8002`.
+- **numba installeert niet** (vaak op een heel nieuwe Python): niet erg, de bot werkt zonder; verwijder die regel uit requirements.txt.
+- **pip is oud / SSL-fout**: `python -m pip install --upgrade pip` en opnieuw.
+- **Dashboard opent maar blijft leeg**: ververs de pagina (F5) en kijk of het adres klopt met de poort in het venster.
+- **Op de server geen koersen**: Binance blokkeert sommige landen (VS); kies een server in Europa of een andere koersbron bij Instellingen.
+Werkt het nog niet: kopieer de laatste 20 regels uit het venster en stuur die door.
 
 ## Profielen (Instellingen > Profiel)
 
@@ -292,7 +311,7 @@ De bot moet ergens 24 uur per dag aan staan. Zonder te betalen kan dat zo:
    Krijg je "Out of host capacity", probeer het later opnieuw of kies een ander beschikbaarheidsdomein.
 4. Kopieer de map van de bot naar de server (bijvoorbeeld met `scp -r dashboard ubuntu@IP:~/bot`) en voer daar uit:
    `cd ~/bot && bash install_server.sh`
-5. Dashboard bekijken vanaf je eigen computer: `ssh -L 8000:localhost:8000 ubuntu@IP` en open http://localhost:8000.
+5. Dashboard bekijken vanaf je eigen computer: `ssh -L 8001:localhost:8001 ubuntu@IP` en open http://localhost:8001.
    Klik daar een keer op Start. Daarna draait hij door, ook na een herstart van de server.
 6. Zet Telegram-meldingen aan, dan zie je alles op je telefoon zonder in te loggen.
 

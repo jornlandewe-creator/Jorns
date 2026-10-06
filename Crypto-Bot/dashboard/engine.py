@@ -6,7 +6,12 @@ Stop loss / take profit intrabar; als beide in dezelfde candle geraakt worden te
 """
 import numpy as np
 import pandas as pd
-from numba import njit
+try:
+    from numba import njit
+except Exception:                                    # numba niet geinstalleerd of niet beschikbaar: pure Python (langzamer, zelfde uitkomst)
+    def njit(*a, **k):
+        if a and callable(a[0]): return a[0]
+        return lambda f: f
 
 # ---------------------------------------------------------------- indicatoren
 
