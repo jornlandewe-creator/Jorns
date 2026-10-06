@@ -1,0 +1,20 @@
+{
+  "pages": 4,
+  "stills": 6,
+  "clips": 8,
+  "cursor": true,
+  "timewarp": 2,
+  "timewarpScroll": 4,
+  "hideWidgets": true,
+  "headed": false,
+  "uploadStills": 4,
+  "uploadTagged": true,
+  "uploadVideos": 3,
+  "maxImages": 9,
+  "maxVideoTotal": 15,
+  "seedanceClipMax": 5,
+  "showcase": true,
+  "preview": false,
+  "maxSubframes": 40,
+  "minClipFps": 24
+}

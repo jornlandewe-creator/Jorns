@@ -1,0 +1,176 @@
+{
+ "whoosh_short": [
+  {
+   "file": "whoosh_short/whoosh_short_01.wav",
+   "dur": 0.84,
+   "peak": 0.389
+  },
+  {
+   "file": "whoosh_short/whoosh_short_02.wav",
+   "dur": 0.98,
+   "peak": 0.438
+  },
+  {
+   "file": "whoosh_short/whoosh_short_03.wav",
+   "dur": 0.88,
+   "peak": 0.393
+  }
+ ],
+ "whoosh_mid": [
+  {
+   "file": "whoosh_mid/whoosh_mid_01.wav",
+   "dur": 1.62,
+   "peak": 0.578
+  },
+  {
+   "file": "whoosh_mid/whoosh_mid_02.wav",
+   "dur": 1.14,
+   "peak": 0.58
+  },
+  {
+   "file": "whoosh_mid/whoosh_mid_03.wav",
+   "dur": 1.63,
+   "peak": 0.469
+  }
+ ],
+ "whoosh_big": [
+  {
+   "file": "whoosh_big/whoosh_big_01.wav",
+   "dur": 2.31,
+   "peak": 0.656
+  },
+  {
+   "file": "whoosh_big/whoosh_big_02.wav",
+   "dur": 2.12,
+   "peak": 0.737
+  }
+ ],
+ "transition": [
+  {
+   "file": "transition/transition_01.wav",
+   "dur": 3.9,
+   "peak": 1.481
+  },
+  {
+   "file": "transition/transition_02.wav",
+   "dur": 4.35,
+   "peak": 1.777
+  },
+  {
+   "file": "transition/transition_03.wav",
+   "dur": 3.95,
+   "peak": 1.684
+  }
+ ],
+ "glitch": [
+  {
+   "file": "glitch/glitch_01.wav",
+   "dur": 1.01,
+   "peak": 0.677
+  },
+  {
+   "file": "glitch/glitch_02.wav",
+   "dur": 1.0,
+   "peak": 0.191
+  },
+  {
+   "file": "glitch/glitch_03.wav",
+   "dur": 1.19,
+   "peak": 0.302
+  }
+ ],
+ "click": [
+  {
+   "file": "click/click_01.wav",
+   "dur": 0.26,
+   "peak": 0.041
+  },
+  {
+   "file": "click/click_02.wav",
+   "dur": 0.34,
+   "peak": 0.041
+  }
+ ],
+ "tick": [
+  {
+   "file": "tick/tick_01.wav",
+   "dur": 0.18,
+   "peak": 0.025
+  }
+ ],
+ "pop": [
+  {
+   "file": "pop/pop_01.wav",
+   "dur": 0.36,
+   "peak": 0.229
+  },
+  {
+   "file": "pop/pop_cc0_01.wav",
+   "dur": 0.113,
+   "peak": 0.011
+  },
+  {
+   "file": "pop/pop_cc0_02.wav",
+   "dur": 0.115,
+   "peak": 0.011
+  },
+  {
+   "file": "pop/pop_cc0_03.wav",
+   "dur": 0.136,
+   "peak": 0.01
+  }
+ ],
+ "tap": [
+  {
+   "file": "tap/tap_01.wav",
+   "dur": 0.15,
+   "peak": 0.038
+  },
+  {
+   "file": "tap/tap_cc0_01.wav",
+   "dur": 0.224,
+   "peak": 0.028
+  },
+  {
+   "file": "tap/tap_cc0_02.wav",
+   "dur": 0.197,
+   "peak": 0.011
+  },
+  {
+   "file": "tap/tap_cc0_03.wav",
+   "dur": 0.179,
+   "peak": 0.012
+  },
+  {
+   "file": "tap/tap_cc0_04.wav",
+   "dur": 0.173,
+   "peak": 0.012
+  }
+ ],
+ "thud": [
+  {
+   "file": "thud/thud_01.wav",
+   "dur": 0.89,
+   "peak": 0.04
+  }
+ ],
+ "boom": [
+  {
+   "file": "boom/boom_01.wav",
+   "dur": 1.41,
+   "peak": 0.115
+  }
+ ],
+ "shutter": [
+  {
+   "file": "shutter/shutter_01.wav",
+   "dur": 0.35,
+   "peak": 0.002
+  },
+  {
+   "file": "shutter/shutter_02.wav",
+   "dur": 0.35,
+   "peak": 0.002
+  }
+ ]
+}

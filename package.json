@@ -1,0 +1,27 @@
+{
+  "name": "website-motion-studio",
+  "version": "19.1.0",
+  "description": "Website → stills + echte interactie-clips → map voor ChatGPT en Higgsfield/Seedance",
+  "main": "studio.js",
+  "bin": {
+    "website-motion-capture": "capture.js"
+  },
+  "scripts": {
+    "capture": "node capture.js",
+    "setup": "npx playwright install chromium",
+    "showcase": "node showcase.js",
+    "studio": "node studio.js",
+    "mcp": "node mcp.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "ffmpeg-static": "^5.2.0",
+    "playwright": "^1.55.0",
+    "pngjs": "^7.0.0",
+    "sharp": "^0.35.0",
+    "zod": "^4.6.5"
+  }
+}
