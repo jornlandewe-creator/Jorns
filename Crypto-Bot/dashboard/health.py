@@ -66,8 +66,8 @@ def expected_positions(sysm):
         elif m.key == 'ls':
             for c, p in m.st['pos'].items(): net[c] += p['side'] * p['qty']
         else:
-            for c, s in m.st['sleeves'].items():               # volume: 'BTC', trend: 'st:BTC'
-                if s['pos']: net[c.split(':')[-1]] += s['qty']
+            for c, s in m.st['sleeves'].items():               # volume: 'BTC', trend: 'st:BTC', agent: pos = +1 long / -1 short
+                if s['pos']: net[c.split(':')[-1]] += (s['pos'] if s['pos'] in (1, -1) else 1) * s['qty']
     return dict(net)
 
 

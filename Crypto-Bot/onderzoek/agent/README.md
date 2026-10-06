@@ -18,3 +18,7 @@ volatiliteitsdoel 60% (30 dagen), plafond 1,5x (futures) of 1,0x (spot). Control
 5. `winrate.py` / `winrate2.py`  Trade-niveau: deelwinst op +k ATR met break-even stop, alles verkopen op +k ATR, dips kopen. Deelwinst op +1 ATR (1/3) geeft
               winrate 66% tegen ~9 punten minder rendement per jaar en een kleinere daling; alles verkopen op +1 ATR en dips kopen: hoge winrate, weinig rendement.
               Dit werd het profiel Agent winrate (dashboard/modules.py, AgentWinModule).
+6. `ls.py`     Long/short op futures: shorts als spiegelbeeld (BTC en munt onder SMA200, snelle gemiddelden onder), shorts betalen 0,03%/dag.
+              Halve short-grootte en alleen als het 200-daags gemiddelde van BTC daalt: 2018 +18%, 2022 +22% (long-only -3% en 0%), 57%/jr, daling -28%.
+              Volle short-grootte of meer hefboom: diepere daling, minder buiten de steekproef. Geen enkele variant haalt 50% in elk jaar (beste: 5 van 8 jaren).
+              Dit werd het profiel Agent long/short (alleen futures).

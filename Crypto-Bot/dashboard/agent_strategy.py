@@ -14,7 +14,8 @@ De bot herbalanceert naar het doelgewicht als het verschil groter is dan 2% van 
 import numpy as np, pandas as pd
 
 AGENT_COINS = ('BTC', 'ETH', 'SOL')
-AGENT_PARAMS = dict(looks=(20, 50, 100), band=0.02, gate_n=200, vol_n=30, vol_target=0.60, min_hist=200, reb_thresh=0.02)
+AGENT_PARAMS = dict(looks=(20, 50, 100), band=0.02, gate_n=200, vol_n=30, vol_target=0.60, min_hist=200, reb_thresh=0.02,
+                    short_mult=0.5, short_falling=20)   # shorts (alleen profiel long/short): halve grootte, alleen als het 200-daags gemiddelde van BTC daalt
 
 
 def trend_state(close, n, band, prev=None):
@@ -47,22 +48,36 @@ def realised_vol(close, n):
     return float(r.std() * np.sqrt(365))
 
 
-def target_weight(coin_close, btc_close, cap, p=AGENT_PARAMS):
-    """Doelgewicht van één munt (0 .. cap) als deel van het geld dat voor die munt is bestemd.
-    coin_close / btc_close: afgesloten dagslotkoersen (nieuwste laatst)."""
+def ensemble_down(close, looks, band):
+    """Deel van de gemiddelden waar de koers (met band) onder staat: 0 .. 1 (spiegelbeeld voor shorts)."""
+    return float(np.mean([1.0 - trend_state_series(close, n, band)[-1] for n in looks]))
+
+
+def target_weight(coin_close, btc_close, cap, p=AGENT_PARAMS, shorts=False):
+    """Doelgewicht van één munt als deel van het geld dat voor die munt is bestemd: 0 .. cap (long) of, met shorts aan,
+    -cap x short_mult .. 0 (short). coin_close / btc_close: afgesloten dagslotkoersen (nieuwste laatst).
+    Short alleen als BTC én de munt onder hun 200-daags gemiddelde staan en het 200-daags gemiddelde van BTC daalt (bevestigde bear)."""
     coin_close = np.asarray(coin_close, dtype=float); btc_close = np.asarray(btc_close, dtype=float)
-    if len(coin_close) < p['min_hist'] or len(btc_close) < p['gate_n']: return 0.0, dict(reden='te weinig historie')
-    btc_up = btc_close[-1] > btc_close[-p['gate_n']:].mean()
-    coin_up = coin_close[-1] > coin_close[-p['gate_n']:].mean()
-    if not btc_up: return 0.0, dict(reden='BTC onder 200-daags gemiddelde', gate=0, ens=0, vol=None)
-    if not coin_up: return 0.0, dict(reden='munt onder 200-daags gemiddelde', gate=0, ens=0, vol=None)
-    ens = ensemble(coin_close, p['looks'], p['band'])
+    n = p['gate_n']
+    if len(coin_close) < p['min_hist'] or len(btc_close) < n + p['short_falling']: return 0.0, dict(reden='te weinig historie')
+    btc_ma = btc_close[-n:].mean(); btc_up = btc_close[-1] > btc_ma
+    coin_up = coin_close[-1] > coin_close[-n:].mean()
     v = realised_vol(coin_close, p['vol_n'])
     scale = min(cap, p['vol_target'] / v) if (v and np.isfinite(v) and v > 0) else 0.0
-    w = ens * scale
-    return float(w), dict(reden='trend', gate=1, ens=round(ens, 3), vol=round(v, 3) if v == v else None, schaal=round(scale, 3))
+    if btc_up and coin_up:
+        ens = ensemble(coin_close, p['looks'], p['band'])
+        return float(ens * scale), dict(reden='trend', gate=1, ens=round(ens, 3), vol=round(v, 3) if v == v else None, schaal=round(scale, 3))
+    if shorts and not btc_up and not coin_up:
+        falling = btc_ma < btc_close[-n - p['short_falling']:-p['short_falling']].mean()
+        if falling:
+            ens = ensemble_down(coin_close, p['looks'], p['band'])
+            return float(-ens * scale * p['short_mult']), dict(reden='short', gate=-1, ens=round(ens, 3), vol=round(v, 3) if v == v else None, schaal=round(scale * p['short_mult'], 3))
+        return 0.0, dict(reden='onder 200-daags gemiddelde, maar gemiddelde daalt nog niet (geen short)', gate=0, ens=0, vol=None)
+    if not btc_up: return 0.0, dict(reden='BTC onder 200-daags gemiddelde', gate=0, ens=0, vol=None)
+    return 0.0, dict(reden='munt onder 200-daags gemiddelde', gate=0, ens=0, vol=None)
 
 
 def explain(w, info):
+    if info.get('reden') == 'short': return f'short {-w*100:.0f}% (daling {info["ens"]*100:.0f}% x schaal {info["schaal"]:.2f} bij beweeglijkheid {info["vol"]*100:.0f}%)'
     if info.get('reden') != 'trend': return f'cash ({info.get("reden")})'
     return f'{w*100:.0f}% (trend {info["ens"]*100:.0f}% x schaal {info["schaal"]:.2f} bij beweeglijkheid {info["vol"]*100:.0f}%)'

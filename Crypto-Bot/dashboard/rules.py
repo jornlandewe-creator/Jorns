@@ -57,6 +57,14 @@ RULES = [
          stop='2 ATR onder de instap, elke ronde bewaakt. Na de deelwinst: break-even. Bij hefboom ook de liquidatie-bescherming. '
               'Account: noodstop (30% onder de top) en dagstop (25% binnen 24 uur).',
          grootte='Een derde van de pot per munt (SOL pas na 200 dagen historie), elke maand weer gelijk getrokken. Getest: winrate rond 66%, gemiddelde winst +17%, gemiddeld verlies -7,5%.'),
+    # ---------------- Agent long/short
+    dict(strat='Agent long/short', module='Agent long/short', tf='dag',
+         instap='Long: als Agent (BTC en munt boven 200-daags gemiddelde, trend-ensemble 20/50/100, volatiliteitsdoel). Short: alleen als BTC én de munt onder hun '
+                '200-daags gemiddelde staan én het 200-daags gemiddelde van BTC lager is dan 20 dagen eerder (bevestigde bear). Short-grootte = deel van de gemiddelden '
+                '(20/50/100, band 2%) waar de koers onder staat x 60% / beweeglijkheid x 0,5. Alleen futures.',
+         uit='Long: als Agent. Short: koers boven een gemiddelde (plus 2%) verkleint de short; BTC of munt weer boven het 200-daags gemiddelde sluit hem.',
+         stop='Long: liquidatie-bescherming bij hefboom. Short: noodstop bij +40% stijging (60% van de afstand tot liquidatie). Account: noodstop 35% en dagstop 25%.',
+         grootte='Een derde van de pot per munt, elke maand gelijk getrokken. Shorts betalen in de test 0,03% per dag financiering (geen funding-inkomsten gerekend).'),
     # ---------------- Agent
     dict(strat='Agent', module='Agent', tf='dag',
          instap='Elke dag na het dagslot (00:00 UTC), per munt (BTC, ETH, SOL): alleen als BTC én de munt boven hun 200-daags gemiddelde staan (hard marktfilter). '
@@ -80,6 +88,8 @@ RULES = [
          grootte='De helft van het totaal per munt; elke maand weer gelijk getrokken. Alle winst blijft in de pot.'),
 ]
 ALGEMEEN = [
+    'Profiel Agent long/short (v13, alleen futures): als Agent plus shorts op halve grootte in een bevestigde bear market. Dagdata 2018 - sep 2026: 57% per jaar, '
+    'daling -30%, 2018 +21% en 2022 +22% (long-only: -3% en 0%). Buiten de steekproef (2023-2026) rond 40% per jaar. Geen enkel geteste variant haalt 50% in elk jaar.',
     'Profiel Agent winrate (v13, standaard): dezelfde poort als Agent maar als losse trades met deelwinst op +1 ATR en break-even stop. Dagdata 2018 - sep 2026: '
     '45% per jaar, daling -24%, 14 trades per jaar, winrate 66%, profit factor 2,8. Buiten de steekproef (2023-2026): 33% per jaar. Winrate hoger dan 50% is geen '
     'bewijs van kunde: wat telt is winrate x gemiddelde winst tegenover gemiddeld verlies (de verwachting per trade).',

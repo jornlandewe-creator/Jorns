@@ -45,7 +45,7 @@ niet aan één toevallige instelling. Dubbele kosten kosten 1 procentpunt per ja
 | Trend-vasthouden (oud standaardprofiel) | 1,0x | 33% | -62% | -36% | 7 | 25% | +109% / -6% | 37% per jaar, daling -29% |
 | BTC vasthouden | | 24% | -81% | | | | | 55% per jaar, daling -53% |
 
-Per jaar (Agent): 2018 -3%, 2019 +78%, 2020 +232%, 2021 +106%, 2022 0%, 2023 +73%, 2024 +74%, 2025 -3%, 2026 (t/m sep) +27%.
+Per jaar (Agent): 2018 0%, 2019 +78%, 2020 +232%, 2021 +106%, 2022 0%, 2023 +73%, 2024 +74%, 2025 -3%, 2026 (t/m sep) +27%.
 Positieve maanden: 55% van de maanden waarin de agent in de markt zat (de rest van de tijd staat hij in cash, 0%).
 
 Eerlijk:
@@ -88,6 +88,33 @@ min (1 - winrate) x gemiddeld verlies. De Agent zonder winstname heeft met 27% w
 Agent winrate met 66% (+9%). Beide zijn over 2018-2026 en in de controleperiode duidelijk positief; welke je kiest hangt af van wat je volhoudt.
 Veel mensen stoppen met een systeem dat 7 van de 10 keer verliest, ook als het werkt. Daarom is Agent winrate nu het standaardprofiel.
 
+### Agent long/short (futures): ook verdienen in een bear market
+Als Agent, plus shorts. Een short wordt alleen geopend als drie dingen tegelijk waar zijn: BTC onder zijn 200-daags gemiddelde, de munt onder
+haar 200-daags gemiddelde, en het 200-daags gemiddelde van BTC lager dan 20 dagen eerder (de bear is bevestigd, geen eerste dip). De short-grootte
+is het spiegelbeeld van de long-inzet, maar op de helft: short squeezes in crypto zijn heftiger dan dalingen. Shorts betalen in de test 0,03% per dag
+financiering en krijgen geen funding-inkomsten toegerekend (conservatief). Alleen op een futures-account; op spot staat dit profiel vanzelf long-only.
+
+| | Per jaar | Grootste daling | 2018 | 2022 | Slechtste jaar | Jaren met 50% of meer | 2023-2026 (controle) |
+|---|---|---|---|---|---|---|---|
+| **Agent long/short** | **57%** | **-30%** | **+21%** | **+22%** | -3% (2025) | 5 van 8 | 39% per jaar, -28% |
+| Agent (long-only) | 54% | -27% | -3% | 0% | -3% (2025) | 5 van 8 | 42% per jaar, -27% |
+
+Per jaar: 2018 +21%, 2019 +67%, 2020 +205%, 2021 +103%, 2022 +22%, 2023 +59%, 2024 +67%, 2025 -3%, 2026 (t/m sep) +32%.
+Echte bot-replay in stappen van 30 minuten, maart 2024 - sep 2026: 15% per jaar, daling -30% (in die periode kwam geen bevestigde bear voor,
+dus vrijwel alleen longs).
+
+Onderzocht en afgewezen (`onderzoek/agent/ls.py`):
+- Shorts op volle grootte: 47% per jaar, daling -45%, buiten de steekproef maar 20%. Bear-market-rally's (2022, 2024-2025) doen shorts pijn.
+- Shorts zonder de eis dat het 200-daags gemiddelde daalt: dieper (-35%) en minder rendement.
+- Meer hefboom (2x, 3x) of een hoger volatiliteitsdoel: wel 60-67% per jaar in de steekproef, maar dalingen van -58 tot -70% en buiten de
+  steekproef 15-20% per jaar. Hefboom vergroot vooral de slechte jaren.
+- 10 munten long/short: 27-33% per jaar, daling -37 tot -50%.
+
+**Over "minimaal 50% in elk jaar"**: geen enkele geteste variant haalt dat. De beste halen 50% of meer in 5 van de 8 volle jaren; 2025 is bij
+alle varianten rond nul, omdat de markt dat jaar zijwaarts ging zonder bevestigde trend omhoog of omlaag. Een systeem dat elk jaar 50% belooft
+bestaat niet; wie het wel belooft, heeft het op het verleden afgestemd (zie de hefboom-varianten hierboven: prachtig in de steekproef, mager erbuiten).
+Wat de Agent wel biedt: positief of vlak in de bear-jaren, grote winsten in de bull-jaren, en een daling die nooit dieper kwam dan -30%.
+
 ### Fail-safes (risico en zelfbescherming)
 Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:
 - **Noodstop**: account 35% onder zijn top (Agent spot 30%, Agent rustig 25%) -> alles dicht, 14 dagen pauze, daarna halve inzet tot een nieuwe top.
@@ -99,7 +126,7 @@ Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:
   bij trendvolgen een nadeel, geen bescherming; de bescherming tegen gewone crashes zit in het marktfilter en de krimpende inzet.
 - **NOODSTOP-bestand** (nieuw): maak een leeg bestand `NOODSTOP` in de map `dashboard` en de bot sluit alles en pauzeert tot je in het
   dashboard op Hervatten klikt. Werkt ook als je niet bij het dashboard kunt (bijvoorbeeld via SSH: `touch ~/bot/NOODSTOP`).
-- **Liquidatie-bescherming** bij hefboom: sluiten op 60% van de afstand tot liquidatie.
+- **Liquidatie-bescherming** bij hefboom: sluiten op 60% van de afstand tot liquidatie. Shorts altijd: dicht bij +40% stijging sinds de instap.
 - **Koerscontrole**: koersen ouder dan 2 uur of een sprong van meer dan 25% in één ronde -> die ronde wordt niet gehandeld.
 - **Foutherstel**: een fout stopt de bot niet (loggen, wachten, opnieuw); een bewaker herstart het proces; de stand wordt na elke ronde
   veilig opgeslagen met reservekopie; na een herstart hervat hij zelf.

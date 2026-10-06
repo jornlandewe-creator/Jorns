@@ -654,9 +654,9 @@ class AgentModule:
     groter is dan 2% van het deelaccount. Maandelijks worden de drie delen weer gelijk getrokken. Alleen long.
     Bij hefboom (plafond > 1): noodstop ruim voor liquidatie (60% van de afstand)."""
     name = 'Agent'
-    def __init__(self, capital, lev, log, state=None, cap=1.5, naam=None, coins=AGENT_COINS, params=None):
+    def __init__(self, capital, lev, log, state=None, cap=1.5, naam=None, coins=AGENT_COINS, params=None, shorts=False):
         if naam: self.name = naam
-        self.lev = lev; self.cap = float(cap); self.log = lambda m: log('[Agent] ' + m)
+        self.lev = lev; self.cap = float(cap); self.shorts = bool(shorts); self.log = lambda m: log('[Agent] ' + m)
         self.coins = tuple(coins); self.p = dict(AGENT_PARAMS, **(params or {}))
         self.st = state or dict(sleeves={c: dict(cash=capital / len(self.coins), pos=0, qty=0.0, entry=0.0, real=0.0, w=0.0) for c in self.coins},
                                 trades=[], last_day=None, last_month=None, info={})
@@ -667,41 +667,48 @@ class AgentModule:
     def _cap(self):
         """Plafond voor het gewicht: profielplafond x stand van de noodrem (System geeft lev x factor door)."""
         return self.cap * max(min(self.lev / max(self.cap, 1e-9), 1.0), 0.0)
-    def _eq(self, c, s, p): return s['cash'] + (s['qty'] * (p - s['entry']) if s['pos'] else 0.0)
+    def _eq(self, c, s, p): return s['cash'] + (s['pos'] * s['qty'] * (p - s['entry']) if s['pos'] else 0.0)
     def equity(self, feed): return sum(self._eq(c, s, feed.price(c)) for c, s in self.st['sleeves'].items())
     def add_cash(self, d):
         for s in self.st['sleeves'].values(): s['cash'] += d / len(self.st['sleeves'])
     def _mark(self, s, price):
         """Open resultaat boeken naar cash en de instap op de huidige koers zetten (voor bijstellen)."""
         if s['pos']:
-            pnl = s['qty'] * (price - s['entry']); s['cash'] += pnl; s['real'] = s.get('real', 0.0) + pnl; s['entry'] = price
+            pnl = s['pos'] * s['qty'] * (price - s['entry']); s['cash'] += pnl; s['real'] = s.get('real', 0.0) + pnl; s['entry'] = price
     def _exit(self, b, c, s, price, reason, now):
-        fill = b.trade(s, c, -1, s['qty'], price); pnl = s['qty'] * (fill - s['entry']); s['cash'] += pnl
-        self.st['trades'].append(dict(t=str(now), strat=self.name, coin=c, side='long', entry=round(s['entry'], 6), exit=round(fill, 6),
+        side = s['pos'] or 1
+        fill = b.trade(s, c, -side, s['qty'], price); pnl = side * s['qty'] * (fill - s['entry']); s['cash'] += pnl
+        self.st['trades'].append(dict(t=str(now), strat=self.name, coin=c, side='long' if side > 0 else 'short', entry=round(s.get('entry0') or s['entry'], 6), exit=round(fill, 6),
                                       pnl=round(pnl + s.get('real', 0.0), 2), pct=None, reason=reason))
-        s.update(pos=0, qty=0.0, entry=0.0, real=0.0, w=0.0)
-        self.log(f'{c} verkocht @ {fill:,.4g} ({reason})')
+        s.update(pos=0, qty=0.0, entry=0.0, entry0=0.0, real=0.0, w=0.0)
+        self.log(f'{c} {"verkocht" if side > 0 else "short gesloten"} @ {fill:,.4g} ({reason})')
     def _set(self, b, c, s, target_notional, price, now, why):
-        """Positie bijstellen naar een doelwaarde in geld. Kleine verschillen (< drempel) worden genegeerd."""
-        eq = self._eq(c, s, price); cur = s['qty'] * price if s['pos'] else 0.0
+        """Positie bijstellen naar een doelwaarde in geld (negatief = short). Kleine verschillen (< drempel) worden genegeerd."""
+        eq = self._eq(c, s, price); cur = s['pos'] * s['qty'] * price if s['pos'] else 0.0
         if abs(target_notional - cur) < self.p['reb_thresh'] * max(eq, 1e-9): return
-        if target_notional <= 0.0 and s['pos']: self._exit(b, c, s, price, why, now); return
+        if s['pos'] and (target_notional == 0.0 or np.sign(target_notional) != s['pos']):
+            self._exit(b, c, s, price, why, now); cur = 0.0
+            if target_notional == 0.0: return
+        side = 1 if target_notional > 0 else -1
         dq = b.amt(c, abs(target_notional - cur) / price)
         if dq <= 0: return
-        if target_notional > cur:
-            fill = b.trade(s, c, 1, dq, price)
+        if abs(target_notional) > abs(cur):                       # vergroten (of openen) in de richting van de positie
+            fill = b.trade(s, c, side, dq, price)
             if s['pos']: s['entry'] = (s['entry'] * s['qty'] + fill * dq) / (s['qty'] + dq); s['qty'] += dq
-            else: s.update(pos=1, qty=dq, entry=fill, real=0.0); self.log(f'{c} gekocht @ {fill:,.4g} ({why})')
-        else:
+            else: s.update(pos=side, qty=dq, entry=fill, entry0=fill, real=0.0); self.log(f'{c} {"gekocht" if side > 0 else "short geopend"} @ {fill:,.4g} ({why})')
+        else:                                                     # verkleinen
             if dq >= s['qty']: self._exit(b, c, s, price, why, now); return
-            fill = b.trade(s, c, -1, dq, price); pnl = dq * (fill - s['entry']); s['cash'] += pnl; s['real'] = s.get('real', 0.0) + pnl
+            fill = b.trade(s, c, -side, dq, price); pnl = side * dq * (fill - s['entry']); s['cash'] += pnl; s['real'] = s.get('real', 0.0) + pnl
             s['qty'] -= dq; self.log(f'{c} verkleind naar {s["qty"] * price / max(eq, 1e-9) * 100:.0f}% ({why})')
     def step(self, feed, b):
         now = feed.now(); cap = self._cap()
-        for c, s in self.st['sleeves'].items():            # liquidatie-bescherming bij hefboom (elke ronde)
-            if s['pos'] and cap > 1.0:
+        for c, s in self.st['sleeves'].items():            # liquidatie-bescherming (elke ronde): longs bij hefboom, shorts altijd
+            if s['pos'] == 1 and cap > 1.0:
                 stop = s['entry'] * (1 - 0.6 / cap); ib = feed.intrabar(c); lo = ib[2] if ib else feed.price(c)
                 if lo <= stop: self._exit(b, c, s, min(ib[0], stop) if ib else feed.price(c), 'noodstop (liquidatie-bescherming)', now)
+            elif s['pos'] == -1:
+                stop = s['entry'] * (1 + 0.6 / max(cap, 1.0)); ib = feed.intrabar(c); hi = ib[1] if ib else feed.price(c)
+                if hi >= stop: self._exit(b, c, s, max(ib[0], stop) if ib else feed.price(c), 'noodstop short (liquidatie-bescherming)', now)
         btc = feed.candles('BTC', '1d', n=self.p['gate_n'] + 30)
         if len(btc) < self.p['gate_n']: return self.equity(feed)
         day = str(btc.index[-1])
@@ -719,24 +726,28 @@ class AgentModule:
             for c, s in self.st['sleeves'].items(): s['cash'] = tot / len(elig) if c in elig else 0.0
         for c, s in self.st['sleeves'].items():
             dc = dcs[c]
-            w, info = target_weight(dc.close.values, btc.close.values, cap, self.p) if len(dc) else (0.0, dict(reden='geen data'))
+            allow_short = self.shorts and getattr(self, 'allow_short', True)
+            w, info = target_weight(dc.close.values, btc.close.values, cap, self.p, shorts=allow_short) if len(dc) else (0.0, dict(reden='geen data'))
             if not can_trade(self, c): w, info = 0.0, dict(reden='niet verhandelbaar op deze exchange')
-            if w > 0 and not s['pos'] and news_blocked(getattr(self, 'news', None), 'long', c, now): w, info = 0.0, dict(reden='nieuwsblokkade')
+            if w != 0 and not s['pos'] and news_blocked(getattr(self, 'news', None), 'long' if w > 0 else 'short', c, now): w, info = 0.0, dict(reden='nieuwsblokkade')
             self.st['info'][c] = dict(info, w=round(w, 3), dag=day[:10])
             price = feed.price(c); eq = self._eq(c, s, price)
             if s['pos']: self._mark(s, price)
-            self._set(b, c, s, w * eq * 0.995, price, now, explain(w, info) if w > 0 else info.get('reden', 'uit'))
+            self._set(b, c, s, w * eq * 0.995, price, now, explain(w, info) if w != 0 else info.get('reden', 'uit'))
             s['w'] = round(w, 3)
         return self.equity(feed)
     def finance(self, feed, hrs):
+        """Financiering (paper): geleend deel van longs en de hele short-notional betalen 0,03% per dag."""
         for c, s in self.st['sleeves'].items():
             if s['pos']:
-                p = feed.price(c); borrowed = max(s['qty'] * p - self._eq(c, s, p), 0.0)
+                p = feed.price(c); notional = s['qty'] * p
+                borrowed = notional if s['pos'] < 0 else max(notional - self._eq(c, s, p), 0.0)
                 if borrowed > 0: s['cash'] -= FIN_DAY * hrs / 24 * borrowed
     def positions(self, feed):
-        return [dict(module=self.name, strat=self.name, coin=c, side='long', entry=s['entry'],
-                     stop=(s['entry'] * (1 - 0.6 / self._cap())) if self._cap() > 1 else None,
-                     pnl=s['qty'] * (feed.price(c) - s['entry']), gewicht=s.get('w')) for c, s in self.st['sleeves'].items() if s['pos']]
+        cap = self._cap()
+        return [dict(module=self.name, strat=self.name, coin=c, side='long' if s['pos'] > 0 else 'short', entry=s.get('entry0') or s['entry'],
+                     stop=(s['entry'] * (1 - 0.6 / cap) if cap > 1 else None) if s['pos'] > 0 else s['entry'] * (1 + 0.6 / max(cap, 1.0)),
+                     pnl=s['pos'] * s['qty'] * (feed.price(c) - s['entry']) + s.get('real', 0.0), gewicht=s.get('w')) for c, s in self.st['sleeves'].items() if s['pos']]
     def trades(self): return [dict(t, module=self.name) for t in self.st['trades']]
     def set_lev(self, lev): self.lev = lev
     def scale(self, feed, b, f, now, reason):
@@ -747,7 +758,7 @@ class AgentModule:
             q = b.amt(c, s['qty'] * abs(f - 1))
             if q <= 0: continue
             self._mark(s, price)
-            b.trade(s, c, 1 if f > 1 else -1, q, price)
+            b.trade(s, c, s['pos'] * (1 if f > 1 else -1), q, price)
             s['qty'] = s['qty'] + q if f > 1 else s['qty'] - q; s['entry'] = price
 
 
@@ -843,6 +854,10 @@ PROFILES = {
                            verwacht=dict(dag='0,10%', maand='+3,2%', jaar='45% (2018-2026; 2023-2026: 33%)', daling='−24%', winrate='66%')),
     # Agent (v13): trend-ensemble x hard marktfilter x volatiliteitsdoel op BTC+ETH+SOL. Dagdata 2018 - sep 2026, kosten 0,05% + 0,03% per kant,
     # buiten de steekproef (2023-2026) gecontroleerd. Zie LEESMIJ.md "Agent" en backtest_agent.py (zelfde code als live).
+    # Agent long/short (v13): als Agent, plus shorts (halve grootte) als BTC én de munt onder hun 200-daags gemiddelde staan en het 200-daags
+    # gemiddelde van BTC daalt. Alleen futures. Shorts betalen 0,03% per dag. 2018: +18%, 2022: +22% (long-only: -3% en 0%). Zie onderzoek/agent/ls.py.
+    'agent_ls':       dict(naam='Agent long/short', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.5, shorts=True), dagstop=0.25,
+                           verwacht=dict(dag='0,12%', maand='+3,8%', jaar='57% (2018-2026; 2023-2026: 39%)', daling='−30%', winrate='31%')),
     'agent':          dict(naam='Agent', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.5), dagstop=0.25,
                            verwacht=dict(dag='0,12%', maand='+3,7%', jaar='54% (2018-2026; 2023-2026: 42%)', daling='−27%', winrate='35% (actieve maanden 49%)')),
     'agent_spot':     dict(naam='Agent spot', lev=1.0, brake=None, stop=0.30, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.0), dagstop=0.20,
