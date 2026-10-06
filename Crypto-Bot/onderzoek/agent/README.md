@@ -22,3 +22,5 @@ volatiliteitsdoel 60% (30 dagen), plafond 1,5x (futures) of 1,0x (spot). Control
               Halve short-grootte en alleen als het 200-daags gemiddelde van BTC daalt: 2018 +18%, 2022 +22% (long-only -3% en 0%), 57%/jr, daling -28%.
               Volle short-grootte of meer hefboom: diepere daling, minder buiten de steekproef. Geen enkele variant haalt 50% in elk jaar (beste: 5 van 8 jaren).
               Dit werd het profiel Agent long/short (alleen futures).
+7. `h4.py`     Snellere agent op 4-uursdata (zelfde poort) en combinatie dag + 4h: 41-53%/jr, daling -27 tot -32%, nooit beter dan de dag-agent
+              (54%/jr, -27%). Sneller beslissen helpt niet; de dag-agent blijft de keuze.

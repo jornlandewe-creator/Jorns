@@ -9,7 +9,7 @@
 Laat de computer aan staan; de bot handelt alleen terwijl hij draait. Op de Mac houdt het startbestand
 de computer wakker zolang de bot draait.
 
-## Agent (sinds v13; standaardprofiel is Agent winrate, zie verderop)
+## Agent (sinds v13; standaardprofiel is Agent long/short, zie verderop)
 
 De bot is nu een **agent**: een programma dat zelfstandig beslist, uitvoert, zichzelf bewaakt en bij gevaar zelf ingrijpt.
 Je kunt hem draaien met het dashboard (`server.py`) of zonder (`python agent.py`, zie onderaan dit hoofdstuk). Beide gebruiken
@@ -86,7 +86,8 @@ winnaar al vroeg wordt verkocht. Daar staat een kleinere daling tegenover. Onder
 Belangrijk: een winrate boven 50% bewijst geen kunde en eronder geen geluk. Wat telt is de verwachting per trade: winrate x gemiddelde winst
 min (1 - winrate) x gemiddeld verlies. De Agent zonder winstname heeft met 27% winrate een grotere verwachting per trade (+22% van de inzet) dan
 Agent winrate met 66% (+9%). Beide zijn over 2018-2026 en in de controleperiode duidelijk positief; welke je kiest hangt af van wat je volhoudt.
-Veel mensen stoppen met een systeem dat 7 van de 10 keer verliest, ook als het werkt. Daarom is Agent winrate nu het standaardprofiel.
+Veel mensen stoppen met een systeem dat 7 van de 10 keer verliest, ook als het werkt. Kies Agent winrate als je dat herkent; het standaardprofiel is
+Agent long/short (hoogste rendement bij een daling van -30%), dat op een spot-account vanzelf long-only draait.
 
 ### Agent long/short (futures): ook verdienen in een bear market
 Als Agent, plus shorts. Een short wordt alleen geopend als drie dingen tegelijk waar zijn: BTC onder zijn 200-daags gemiddelde, de munt onder
@@ -133,6 +134,11 @@ Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:
 - **Heartbeat** (nieuw): `heartbeat.json` wordt elke ronde bijgewerkt (tijd, waarde, stand van de rem, gezondheid). `python agent.py --check`
   leest dit en doet de voorcontroles. Zet dat in cron voor een melding als de bot stil staat.
 - **Live**: elk uur worden de posities vergeleken met de exchange (melden of corrigeren). Telegram-meldingen bij noodrem, pauze, fouten, herstart en dagrapport.
+
+### Ook onderzocht, niet ingebouwd
+- Snellere agent op 4-uursdata (zelfde poort, beslissen elke 4 uur) en een combinatie van dag + 4 uur: 41-53% per jaar, daling -27 tot -32%,
+  nooit beter dan de dag-agent (`onderzoek/agent/h4.py`). Sneller beslissen geeft meer kosten en meer heen-en-weer, geen betere uitstap.
+- 10 munten in plaats van 3, dips kopen, alles verkopen op +1 ATR, trailing stops, hogere hefboom: zie de hoofdstukken hierboven.
 
 ### Agent zonder dashboard
 ```
