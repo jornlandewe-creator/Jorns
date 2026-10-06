@@ -1,5 +1,13 @@
 # Changelog
 
+## v20.1
+
+- Tekst in beeld staat standaard **uit** (`captions: false`). Aanzetten kan onder Look > Tekst in beeld.
+- Levende camera (`drift`, standaard 0.6): heel lichte, trage zweving van het hele beeld, dus nooit een stilstaand frame. Ook de grondschaduwen bewegen mee.
+- Lichtstreep (`sweep`, standaard 0.8): per shot trekt één keer een zachte glans over de pagina, het laptopscherm of de telefoon.
+- Lagen en kaarten komen iets verder los (`lift` 1.1).
+- Detectie key features: een cijfer-USP is nu het hele item (getal plus label: "37 jaar vakmanschap") in plaats van alleen het getal, en nooit meer de hele rij. Een rij gelijke blokken telt als groep (pop-wall), niet als losse feature. Dubbele stukken uit lopende teksten (draaiende badge, marquee) worden samengevoegd; een los getal zonder label wordt overgeslagen.
+
 ## v20.0 · strakker, cleaner, premium
 
 Beweging
