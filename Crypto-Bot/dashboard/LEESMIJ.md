@@ -11,7 +11,7 @@
 Laat de computer aan staan; de bot handelt alleen terwijl hij draait. Op de Mac houdt het startbestand
 de computer wakker zolang de bot draait.
 
-## Agent (sinds v13; standaardprofiel is Agent plus, zie verderop)
+## Agent (sinds v13; standaardprofiel is Agent stabiel, zie verderop)
 
 De bot is nu een **agent**: een programma dat zelfstandig beslist, uitvoert, zichzelf bewaakt en bij gevaar zelf ingrijpt.
 Je kunt hem draaien met het dashboard (`server.py`) of zonder (`python agent.py`, zie onderaan dit hoofdstuk). Beide gebruiken
@@ -89,7 +89,7 @@ Belangrijk: een winrate boven 50% bewijst geen kunde en eronder geen geluk. Wat 
 min (1 - winrate) x gemiddeld verlies. De Agent zonder winstname heeft met 27% winrate een grotere verwachting per trade (+22% van de inzet) dan
 Agent winrate met 66% (+9%). Beide zijn over 2018-2026 en in de controleperiode duidelijk positief; welke je kiest hangt af van wat je volhoudt.
 Veel mensen stoppen met een systeem dat 7 van de 10 keer verliest, ook als het werkt. Kies Agent winrate als je dat herkent; het standaardprofiel is
-Agent plus (Agent long/short met kanteling en pyramide), dat op een spot-account vanzelf long-only draait.
+Agent stabiel (meeste rendement per eenheid daling), dat op een spot-account vanzelf long-only draait.
 
 ### Agent long/short (futures): ook verdienen in een bear market
 Als Agent, plus shorts. Een short wordt alleen geopend als drie dingen tegelijk waar zijn: BTC onder zijn 200-daags gemiddelde, de munt onder
@@ -135,7 +135,7 @@ Alles met dezelfde poort, hetzelfde volatiliteitsdoel en dezelfde kosten als de 
 | **Agent + pyramide op nieuwe top** | **58-69%** | -27 tot -32% | 44-52% | beter in alle 12 buurinstellingen |
 | Dips kopen / pieken shorten in zijwaartse markt | -3 tot -33% | | | zie Regime-agent |
 
-### Agent plus (standaardprofiel): Agent long/short met kanteling en pyramide
+### Agent plus: Agent long/short met kanteling en pyramide
 Twee toevoegingen die in elke geteste instelling helpen en allebei al lang bekend zijn uit andere markten:
 - **Kanteling naar relatieve sterkte**: de munt met het hoogste rendement over 56 dagen krijgt 1,25x haar inzet, de zwakste 0,75x.
 - **Pyramide**: zolang een munt op een nieuwe 50-daagse top sluit, 25% extra inzet. Bijkopen in kracht, nooit in zwakte.
@@ -152,6 +152,30 @@ Per jaar (Agent plus): 2018 +21%, 2019 +73%, 2020 +258%, 2021 +122%, 2022 +22%, 
 Eerlijk: het grootste deel van de winst zit in de sterke jaren 2019-2021 en 2023. In de controleperiode is de verbetering een paar
 procentpunt per jaar, en sinds maart 2024 is er geen verschil met de gewone Agent. Op spot (plafond 1,0x) is het effect klein, omdat
 de inzet daar meestal al aan het plafond zit.
+
+### Agent stabiel (standaardprofiel): het meeste rendement per eenheid daling
+Gekozen op Calmar (rendement per jaar gedeeld door de grootste daling), niet op rendement alleen (`onderzoek/agent/stable.py`):
+- Long-inzet = de helft uit het trend-ensemble (20/50/100 dagen) en de helft uit een **Donchian-uitbraak**: erin na een slot boven de hoogste
+  slot van 55 dagen, eruit na een slot onder de laagste slot van 20 dagen. Twee verschillende manieren om een trend te herkennen die elkaar
+  afvlakken: samen een kleinere daling en een minder slechte slechtste maand (-10% in plaats van -15%).
+- Kanteling naar de sterkste munt en pyramide op een nieuwe top (als Agent plus).
+- Shorts op een kwart van de grootte: genoeg om 2018 en 2022 positief te houden, klein genoeg om bear-market-rally's te overleven.
+- Zelfde poort, volatiliteitsdoel en plafond als de Agent.
+
+| | Per jaar | Grootste daling | Calmar | Slechtste maand | 2018 | 2022 | 2025 | 2023-2026 (controle) | Sinds maart 2024 |
+|---|---|---|---|---|---|---|---|---|---|
+| **Agent stabiel** (futures) | **61%** | **-26%** | **2,4** | -11% | +11% | +12% | -4% | 44% per jaar, -23% | 17% per jaar, -23% |
+| Agent stabiel spot (geen hefboom, geen shorts) | 44% | -20% | 2,2 | -9% | 0% | 0% | -4% | 34% per jaar, -17% | |
+| Agent plus | 65% | -31% | 2,1 | -14% | +21% | +22% | 0% | 44% per jaar, -28% | 17% per jaar, -28% |
+| Agent long/short | 57% | -30% | 1,9 | -14% | +21% | +22% | -3% | 39% per jaar, -28% | 15% per jaar, -30% |
+| Agent (long-only) | 54% | -27% | 2,0 | -14% | 0% | 0% | -3% | 42% per jaar, -27% | 15% per jaar, -24% |
+
+Per jaar (Agent stabiel): 2018 +11%, 2019 +75%, 2020 +246%, 2021 +122%, 2022 +12%, 2023 +93%, 2024 +67%, 2025 -4%, 2026 (t/m sep) +27%.
+
+Getest en afgewezen voor dit doel: een snellere crash-uitstap (2 ATR onder de 20-daagse top: daling dieper, niet kleiner), drawdown-remmen
+(kosten rendement, vooral sinds 2024), grotere shorts, langzamere Donchian (70/25, 100/30: diepere daling).
+Eerlijk: ook dit profiel verloor in de test tijdelijk 26% (spot: 20%). Minder daling dan dat kan alleen met minder inzet, en dat kost
+evenredig rendement (volatiliteitsdoel 0,4: 43-45% per jaar bij -18 tot -20%). Die knop heb je zelf: profiel Agent rustig of Agent stabiel spot.
 
 ### Fail-safes (risico en zelfbescherming)
 Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:

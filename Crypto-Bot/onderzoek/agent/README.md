@@ -33,3 +33,7 @@ volatiliteitsdoel 60% (30 dagen), plafond 1,5x (futures) of 1,0x (spot). Control
               Geen enkele familie verslaat de Agent op rendement/daling. Twee toevoegingen helpen wel, in alle buurinstellingen: kanteling naar de
               sterkste munt en 25% extra op een nieuwe 50-daagse top. Dat werd het profiel Agent plus. Rotatie op 10 munten: hoogste rendement
               (71%/jr) maar daling -40% en 2019 vrijwel nul.
+10. `stable.py`  Stabiel: hoogste rendement per eenheid daling (Calmar). Mix van trend-ensemble en Donchian 55/20 als long-signaal, kanteling + pyramide,
+              shorts op kwart grootte: Calmar 2,3 (Agent plus 1,95, Agent 2,0), slechtste maand -10%, controle 2023-2026 44%/jr met daling -22%.
+              Lager volatiliteitsdoel (0,5) zonder shorts: Calmar 2,4, daling -22%. Crash-exit op 2 ATR en drawdown-remmen: slechter.
+              Dit werd het profiel Agent stabiel (standaard) en Agent stabiel spot.

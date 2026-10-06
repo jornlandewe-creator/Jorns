@@ -1,6 +1,8 @@
 # Changelog Crypto-Bot
 
 ## v13 (6 okt 2026): Agent
+- **Agent stabiel** (standaardprofiel) en Agent stabiel spot: gekozen op rendement per eenheid daling. Long-inzet half trend-ensemble, half
+  Donchian-uitbraak 55/20, kanteling + pyramide, shorts op kwart grootte (onderzoek/agent/stable.py).
 - **Agent plus** (standaardprofiel): Agent long/short + kanteling naar de sterkste munt (56 dagen, x1,25 / x0,75) + 25% extra inzet op een
   50-daagse top, binnen het plafond. Negen andere strategie-families getest tegen de Agent (onderzoek/agent/other.py): geen verslaat hem.
 - Dashboard: paneel "Regime per munt" (stijgend / dalend / zijwaarts, inzet, beweeglijkheid, reden). Regime-specialisten voor

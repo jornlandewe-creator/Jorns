@@ -17,7 +17,8 @@ AGENT_COINS = ('BTC', 'ETH', 'SOL')
 AGENT_PARAMS = dict(looks=(20, 50, 100), band=0.02, gate_n=200, vol_n=30, vol_target=0.60, min_hist=200, reb_thresh=0.02,
                     short_mult=0.5, short_falling=20,   # shorts (alleen profiel long/short): halve grootte, alleen als het 200-daags gemiddelde van BTC daalt
                     tilt=False, tilt_look=56, tilt_hi=1.25, tilt_lo=0.75,     # Agent plus: inzet kantelen naar de sterkste munt (rendement 56 dagen)
-                    pyramid=False, pyr_look=50, pyr_extra=0.25)             # Agent plus: 25% extra inzet zolang de munt op een 50-daagse top staat
+                    pyramid=False, pyr_look=50, pyr_extra=0.25,             # Agent plus: 25% extra inzet zolang de munt op een 50-daagse top staat
+                    don_mix=0.0, don_in=55, don_out=20)                     # Agent stabiel: deel van de long-inzet uit een Donchian-uitbraak (in op 55-daagse top, uit op 20-daags dal)
 
 
 def trend_state(close, n, band, prev=None):
@@ -55,6 +56,14 @@ def ensemble_down(close, looks, band):
     return float(np.mean([1.0 - trend_state_series(close, n, band)[-1] for n in looks]))
 
 
+def donchian_state(close, n_in, n_out):
+    """1 na een slot boven de hoogste slot van de n_in dagen ervoor, 0 na een slot onder de laagste slot van de n_out dagen ervoor; anders de vorige toestand."""
+    s = pd.Series(np.asarray(close, dtype=float))
+    hh = s.rolling(n_in).max().shift(1); ll = s.rolling(n_out).min().shift(1)
+    st = pd.Series(np.nan, index=s.index); st[s > hh] = 1.0; st[s < ll] = 0.0
+    return float(st.ffill().fillna(0.0).iloc[-1])
+
+
 def target_weight(coin_close, btc_close, cap, p=AGENT_PARAMS, shorts=False):
     """Doelgewicht van één munt als deel van het geld dat voor die munt is bestemd: 0 .. cap (long) of, met shorts aan,
     -cap x short_mult .. 0 (short). coin_close / btc_close: afgesloten dagslotkoersen (nieuwste laatst).
@@ -68,6 +77,8 @@ def target_weight(coin_close, btc_close, cap, p=AGENT_PARAMS, shorts=False):
     scale = min(cap, p['vol_target'] / v) if (v and np.isfinite(v) and v > 0) else 0.0
     if btc_up and coin_up:
         ens = ensemble(coin_close, p['looks'], p['band'])
+        mix = p.get('don_mix', 0.0)
+        if mix > 0: ens = (1 - mix) * ens + mix * donchian_state(coin_close, p['don_in'], p['don_out'])
         return float(ens * scale), dict(reden='trend', gate=1, ens=round(ens, 3), vol=round(v, 3) if v == v else None, schaal=round(scale, 3))
     if shorts and not btc_up and not coin_up:
         falling = btc_ma < btc_close[-n - p['short_falling']:-p['short_falling']].mean()

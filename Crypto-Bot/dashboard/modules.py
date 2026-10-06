@@ -859,6 +859,14 @@ PROFILES = {
     # buiten de steekproef (2023-2026) gecontroleerd. Zie LEESMIJ.md "Agent" en backtest_agent.py (zelfde code als live).
     # Agent long/short (v13): als Agent, plus shorts (halve grootte) als BTC én de munt onder hun 200-daags gemiddelde staan en het 200-daags
     # gemiddelde van BTC daalt. Alleen futures. Shorts betalen 0,03% per dag. 2018: +18%, 2022: +22% (long-only: -3% en 0%). Zie onderzoek/agent/ls.py.
+    # Agent stabiel (v13): hoogste rendement per eenheid daling (Calmar). Long-inzet = helft trend-ensemble + helft Donchian-uitbraak (55 in / 20 uit),
+    # kanteling + pyramide, shorts op kwart grootte. Gekozen op Calmar in onderzoek/agent/stable.py. Dagdata 2018 - sep 2026: zie LEESMIJ.
+    'agent_stabiel':  dict(naam='Agent stabiel', lev=1.5, brake=None, stop=0.30, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.25,
+                           agent=dict(cap=1.5, shorts=True, params=dict(tilt=True, pyramid=True, don_mix=0.5, short_mult=0.25)),
+                           verwacht=dict(dag='0,13%', maand='+4,1%', jaar='61% (2018-2026; 2023-2026: 44%)', daling='−26%', winrate='31%')),
+    'agent_stabiel_spot': dict(naam='Agent stabiel spot', lev=1.0, brake=None, stop=0.25, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.20,
+                           agent=dict(cap=1.0, shorts=False, params=dict(tilt=True, pyramid=True, don_mix=0.5, vol_target=0.5)),
+                           verwacht=dict(dag='0,11%', maand='+3,4%', jaar='44% (2018-2026; 2023-2026: 34%)', daling='−20%', winrate='29%')),
     # Agent plus (v13): Agent long/short + kanteling naar de sterkste munt (56 dagen, x1,25 / x0,75) + 25% extra op een 50-daagse top, binnen het plafond.
     # Beide ingrediënten verbeteren in alle buurinstellingen (onderzoek/agent/other2.py). Dagdata 2018 - sep 2026: zie LEESMIJ.
     'agent_plus':     dict(naam='Agent plus', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.25,
