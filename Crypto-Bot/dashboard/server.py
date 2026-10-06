@@ -100,8 +100,10 @@ def save_cfg(c):
 def public_cfg(c):
     p = {k: v for k, v in c.items() if k not in SECRET}
     for k in SECRET: p[k + '_ingesteld'] = bool(c.get(k))
-    p['profielen'] = {k: dict(naam=v['naam'], lev=v['lev'], rem=bool(v['brake']), filter=v['sysfilter'], noodstop=(v['stop'] or 0) * 100, verwacht=v['verwacht'])
+    p['profielen'] = {k: dict(naam=v['naam'], lev=v['lev'], rem=bool(v['brake']), filter=v['sysfilter'], noodstop=(v['stop'] or 0) * 100, verwacht=v['verwacht'],
+                              groep=v.get('groep', 'oud'), uitleg=v.get('uitleg', ''))
                       for k, v in PROFILES.items()}
+    p['aanbevolen'] = 'agent_stabiel'
     return p
 
 
@@ -415,7 +417,7 @@ def api_backtest():
     cfg = load_cfg()
     if body.get('profiel'): cfg['profiel'] = body['profiel']
     if body.get('lev') and cfg['profiel'] == 'eigen': cfg['lev'] = min(max(float(body['lev']), 1.0), 6.0)
-    start = body.get('start') or '2026-08-01'; end = body.get('end') or '2026-10-01'
+    start = body.get('start') or '2024-03-01'; end = body.get('end') or '2026-10-01'
     if pd.Timestamp(end) <= pd.Timestamp(start): return jsonify(ok=False, fout='Einddatum moet na de startdatum liggen')
     RUN['stop'].clear(); RUN['sys'] = None; RUN['want'] = False; LOGS.clear()
     RUN['bt'] = dict(start=start, end=end, lev=risk_settings(cfg)[0], klaar=False, voortgang=0.0, profiel_key=cfg['profiel'])

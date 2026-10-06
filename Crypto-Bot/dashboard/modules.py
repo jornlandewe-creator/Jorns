@@ -855,7 +855,7 @@ class AgentWinModule(AgentModule):
 PROFILES = {
     # Agent winrate (v13): zelfde poort en volatiliteitsdoel als Agent, maar losse trades met deelwinst op +1 ATR en break-even stop:
     # winrate rond 67% in plaats van 30%, tegen ongeveer 8 procentpunt minder rendement per jaar en een kleinere daling. Zie onderzoek/agent/winrate.py.
-    'agent_winrate':  dict(naam='Agent winrate', lev=1.5, brake=None, stop=0.30, sysfilter=False, weights=(0, 0, 0, 0, 0, 0, 1), agent=dict(cap=1.5), dagstop=0.25,
+    'agent_winrate':  dict(naam='Agent winrate', groep='variant', uitleg='Deelwinst op +1 ATR: 66% van de trades wint, iets minder rendement.', lev=1.5, brake=None, stop=0.30, sysfilter=False, weights=(0, 0, 0, 0, 0, 0, 1), agent=dict(cap=1.5), dagstop=0.25,
                            verwacht=dict(dag='0,10%', maand='+3,2%', jaar='45% (2018-2026; 2023-2026: 33%)', daling='−24%', winrate='66%')),
     # Agent (v13): trend-ensemble x hard marktfilter x volatiliteitsdoel op BTC+ETH+SOL. Dagdata 2018 - sep 2026, kosten 0,05% + 0,03% per kant,
     # buiten de steekproef (2023-2026) gecontroleerd. Zie LEESMIJ.md "Agent" en backtest_agent.py (zelfde code als live).
@@ -863,15 +863,15 @@ PROFILES = {
     # gemiddelde van BTC daalt. Alleen futures. Shorts betalen 0,03% per dag. 2018: +18%, 2022: +22% (long-only: -3% en 0%). Zie onderzoek/agent/ls.py.
     # Agent stabiel (v13): hoogste rendement per eenheid daling (Calmar). Long-inzet = helft trend-ensemble + helft Donchian-uitbraak (55 in / 20 uit),
     # kanteling + pyramide, shorts op kwart grootte. Gekozen op Calmar in onderzoek/agent/stable.py. Dagdata 2018 - sep 2026: zie LEESMIJ.
-    'agent_stabiel':  dict(naam='Agent stabiel', lev=1.5, brake=None, stop=0.30, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.25,
+    'agent_stabiel':  dict(naam='Agent (aanbevolen)', groep='aanbevolen', uitleg='Meeste rendement per eenheid daling. Werkt op futures en spot (op spot vanzelf zonder hefboom en zonder shorts).', lev=1.5, brake=None, stop=0.30, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.25,
                            agent=dict(cap=1.5, shorts=True, params=dict(tilt=True, pyramid=True, don_mix=0.5, short_mult=0.25)),
                            verwacht=dict(dag='0,13%', maand='+4,1%', jaar='61% (2018-2026; 2023-2026: 44%)', daling='−26%', winrate='31%')),
-    'agent_stabiel_spot': dict(naam='Agent stabiel spot', lev=1.0, brake=None, stop=0.25, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.20,
+    'agent_stabiel_spot': dict(naam='Agent spot rustig', groep='variant', uitleg='Zelfde regels, lager volatiliteitsdoel: kleinste daling. Voor wie liever rustiger zit.', lev=1.0, brake=None, stop=0.25, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.20,
                            agent=dict(cap=1.0, shorts=False, params=dict(tilt=True, pyramid=True, don_mix=0.5, vol_target=0.5)),
                            verwacht=dict(dag='0,11%', maand='+3,4%', jaar='44% (2018-2026; 2023-2026: 34%)', daling='−20%', winrate='29%')),
     # Agent bear (v13): Agent stabiel met shorts op volle grootte. Verdient meer in bear markets (2022 +40%, okt 2025 - jul 2026 +18%) tegen een
     # diepere daling (-33%) en minder buiten de steekproef (37% i.p.v. 44% per jaar): bear-market-rally's doen volle shorts pijn. Zie onderzoek/agent/bear.py.
-    'agent_bear':     dict(naam='Agent bear', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.25,
+    'agent_bear':     dict(naam='Agent bear', groep='variant', uitleg='Volle shorts: meer winst in bear markets, diepere daling (-33%). Alleen futures.', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.25,
                            agent=dict(cap=1.5, shorts=True, params=dict(tilt=True, pyramid=True, don_mix=0.5, short_mult=1.0)),
                            verwacht=dict(dag='0,13%', maand='+4,2%', jaar='63% (2018-2026; 2023-2026: 37%)', daling='−33%', winrate='31%')),
     # Agent plus (v13): Agent long/short + kanteling naar de sterkste munt (56 dagen, x1,25 / x0,75) + 25% extra op een 50-daagse top, binnen het plafond.

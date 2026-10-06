@@ -91,6 +91,7 @@ td{font-family:var(--mono)} td.name{font-family:var(--sans);font-weight:500;text
 .prof b{font-size:14px} .prof span{font:12px var(--mono);color:var(--muted)}
 .prof.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .prof.hot b{color:var(--bad)}
+.prof.big{grid-column:1/-1;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--bg))} .prof .txt{font:12px/1.4 inherit;color:var(--fg);white-space:normal}
 .hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
 .hc{border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:grid;gap:2px;font-size:13px}
 .hc b{font-size:13px;display:flex;align-items:center;gap:6px} .hc span{color:var(--muted);font-size:12px}
@@ -126,11 +127,14 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0}
       <div class="btctl">
         <label class="sub">Van<input type="date" id="bt-from" min="2024-03-01" max="2026-09-30"></label>
         <label class="sub">Tot<input type="date" id="bt-to" min="2024-03-02" max="2026-10-01"></label>
-        <label class="sub">Profiel<select id="bt-prof"><option value="rustig">Rustig 1×</option><option value="standaard" selected>Standaard 2×</option><option value="agressief">Agressief 4×</option><option value="zeer_agressief">Zeer agressief 6×</option></select></label>
+        <label class="sub">Profiel<select id="bt-prof"></select></label>
+        <button class="btn" id="bt-all">Alles (sinds mrt 2024)</button>
+        <button class="btn" id="bt-yr">Dit jaar</button>
         <button class="btn" id="bt-2m">Laatste 2 maanden</button>
         <button class="btn primary" id="bt-run">Backtest draaien</button>
       </div>
     </div>
+    <p class="sub">Een periode korter dan een jaar zegt weinig: de agent zit soms maanden in cash en wint zijn geld in een paar sterke maanden. Kijk naar de hele periode en vergelijk met BTC vasthouden. De tabellen in LEESMIJ.md zijn op dagdata 2018 - 2026; hier kan dat pas vanaf maart 2024 (30-minutendata).</p>
     <div class="bar" id="bt-bar" hidden><i id="bt-prog"></i></div>
     <div id="bt-res" hidden>
       <div class="btgrid">
@@ -148,7 +152,8 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0}
       </table></div>
     </div>
   </section>
-  <div class="banner info" id="intro">Druk op Start om de bot in paper-modus te laten draaien op live koersen. Er wordt niets echt gekocht. Standaardprofiel is <b>Agent stabiel</b> (futures; op spot vanzelf long-only): gekozen op het meeste rendement per eenheid daling. Trend-ensemble plus Donchian-uitbraak, kanteling naar de sterkste munt, pyramide op een nieuwe top, kleine shorts in een bevestigde bear market. Dagdata 2018 - sep 2026: 61% per jaar, daling −26%, slechtste maand −11%; controle 2023-2026: 44% per jaar met daling −23%. Daarnaast <b>Agent winrate</b>: BTC, ETH en SOL, alleen long als BTC en de munt boven hun 200-daags gemiddelde staan, instap boven het 20- en 50-daags gemiddelde, inzet kleiner bij onrust (volatiliteitsdoel), deelwinst op +1 ATR met stop naar break-even. Getest 2018 - sep 2026: 45% per jaar, grootste daling −24%, winrate 66%. Het profiel <b>Agent</b> (zonder winstname) haalt 54% per jaar met daling −27% maar wint maar 30% van de trades. De oudere profielen (vier modules, Trend-vasthouden) blijven beschikbaar. Wil je eerst zien hoe het werkt, kies dan bij Instellingen "Demo".</div>
+  <div class="banner" id="oud-prof" hidden>Je gebruikt nog een oud profiel (<b id="oud-naam"></b>). Het aanbevolen profiel is <b>Agent</b>: 61% per jaar bij een daling van −26% (dagdata 2018 - 2026). <button class="btn primary" id="b-agent" style="margin-left:8px">Overstappen op Agent</button></div>
+  <div class="banner info" id="intro">Druk op Start om de bot in paper-modus te laten draaien op live koersen. Er wordt niets echt gekocht. Het aanbevolen profiel <b>Agent</b> volgt de trend in BTC, ETH en SOL zodra die boven hun 200-daags gemiddelde staan, zet kleiner in bij onrust, kantelt naar de sterkste munt, en gaat klein short in een bevestigde bear market. Getest op dagdata 2018 - sep 2026: 61% per jaar, grootste daling −26%, slechtste maand −11%; controle 2023-2026: 44% per jaar. Alle details en alle afgewezen alternatieven staan in LEESMIJ.md. Wil je eerst zien hoe het werkt, kies dan bij Instellingen "Demo".</div>
 
   <section class="kpis">
     <div class="kpi"><span>Waarde account</span><b id="k-eq">–</b><em id="k-start"></em></div>
@@ -344,10 +349,12 @@ const num=v=>v==null?'–':v.toLocaleString('nl-NL',{maximumFractionDigits:0});
 const cls=v=>v>0?'pos':(v<0?'neg':'');
 let S=null, cfg=null, dirty=false, allTrades=false, PROF='standaard';
 function renderProfs(c){
-  PROF=c.profiel; const P=c.profielen||{};
-  const items=Object.entries(P).sort((a,b)=>a[1].lev-b[1].lev).map(([k,p])=>`<button type="button" class="prof ${k===PROF?'sel':''} ${k==='zeer_agressief'?'hot':''}" data-p="${k}"><b>${p.naam} · ${p.lev}×</b><span>${p.verwacht.jaar} per jaar · winrate ${p.verwacht.winrate||'–'}</span><span>daling ${p.verwacht.daling}</span></button>`);
-  items.push(`<button type="button" class="prof ${PROF==='eigen'?'sel':''}" data-p="eigen"><b>Eigen</b><span>zelf instellen</span></button>`);
-  $('s-prof').innerHTML=items.join(''); profNote();
+  PROF=c.profiel; const P=c.profielen||{}; const card=(k,p,big)=>`<button type="button" class="prof ${k===PROF?'sel':''} ${big?'big':''}" data-p="${k}"><b>${p.naam} · ${p.lev}×</b><span>${p.verwacht.jaar} per jaar · daling ${p.verwacht.daling} · winrate ${p.verwacht.winrate||'–'}</span>${p.uitleg?`<span class="txt">${p.uitleg}</span>`:''}</button>`;
+  const aan=Object.entries(P).filter(([k,p])=>p.groep==='aanbevolen'), varn=Object.entries(P).filter(([k,p])=>p.groep==='variant'), oud=Object.entries(P).filter(([k,p])=>!p.groep||p.groep==='oud').sort((a,b)=>a[1].lev-b[1].lev);
+  let html=aan.map(([k,p])=>card(k,p,true)).join('');
+  html+=`<div class="sub" style="grid-column:1/-1;margin-top:4px">Varianten (zelfde kern, andere nadruk)</div>`+varn.map(([k,p])=>card(k,p,false)).join('');
+  html+=`<details style="grid-column:1/-1"><summary class="sub">Oude en experimentele profielen (niet aanbevolen; staan er voor wie ze al gebruikte)</summary><div class="profs" style="margin-top:8px">${oud.map(([k,p])=>card(k,p,false)).join('')}<button type="button" class="prof ${PROF==='eigen'?'sel':''}" data-p="eigen"><b>Eigen</b><span>zelf instellen</span></button></div></details>`;
+  $('s-prof').innerHTML=html; profNote();
 }
 function profNote(){
   const p=(cfg&&cfg.profielen||{})[PROF];
@@ -355,7 +362,7 @@ function profNote(){
   $('prof-note').textContent=!p?'Hefboom, noodrem en noodstop stel je hieronder zelf in.':
     `${p.lev}× hefboom, noodrem ${p.rem?'aan':'uit'}, trendfilter ${p.filter?'aan':'uit'}, ${p.noodstop?`noodstop bij ${p.noodstop.toFixed(0)}% onder de top`:'geen noodstop (de wekelijkse trendcontrole is de bescherming)'}. Getest: ${p.verwacht.jaar} per jaar, ${p.verwacht.dag} per dag gemiddeld, daling ${p.verwacht.daling}.`+(PROF==='zeer_agressief'?' Groot risico: in de test kon het account tijdelijk meer dan de helft kwijt zijn.':'');
 }
-document.addEventListener('click',e=>{const b=e.target.closest('.prof'); if(!b) return; PROF=b.dataset.p; dirty=true; [...$('s-prof').children].forEach(x=>x.classList.toggle('sel',x.dataset.p===PROF)); profNote();});
+document.addEventListener('click',e=>{const b=e.target.closest('.prof'); if(!b) return; PROF=b.dataset.p; dirty=true; $('s-prof').querySelectorAll('.prof').forEach(x=>x.classList.toggle('sel',x.dataset.p===PROF)); profNote();});
 function renderHealth(s){
   renderNews(s);
   const h=s.health; if(!h) return;
@@ -451,6 +458,8 @@ function render(s){
   $('b-start').hidden=run; $('b-stop').hidden=!run;
   $('err').hidden=!s.fout; $('err').textContent=s.fout?'Fout: '+s.fout:'';
   $('intro').hidden=!!s.stats;
+  {const pk=cfg.profiel, pp=(cfg.profielen||{})[pk]; const oud=!pp||pp.groep==='oud'||pk==='eigen'; $('oud-prof').hidden=!(oud&&pk!=='eigen'); if(oud&&pp) $('oud-naam').textContent=pp.naam;}
+  fillBtProfs(cfg);
   const pv=(cfg.profielen||{})[cfg.profiel]; const ve=pv?pv.verwacht:null;
   $('x-wk').textContent=ve?`getest: ${ve.dag} per dag`:''; $('x-mo').textContent=ve?`getest: ${ve.maand}`:''; $('x-dd').textContent=ve?`getest: ${ve.daling}`:'';
   renderBT(s); renderHealth(s);
@@ -497,19 +506,25 @@ function renderBT(s){
   }
 }
 function setTwoMonths(){ $('bt-from').value='2026-08-01'; $('bt-to').value='2026-10-01'; }
+function setAll(){ $('bt-from').value='2024-03-01'; $('bt-to').value='2026-10-01'; }
+function setYear(){ $('bt-from').value='2026-01-01'; $('bt-to').value='2026-10-01'; }
+function fillBtProfs(c){ const sel=$('bt-prof'); if(sel.options.length) return; const P=c.profielen||{}; const order=['aanbevolen','variant','oud'];
+  Object.entries(P).sort((a,b)=>order.indexOf(a[1].groep)-order.indexOf(b[1].groep)).forEach(([k,p])=>{const o=document.createElement('option'); o.value=k; o.textContent=(p.groep==='oud'?'(oud) ':'')+p.naam+' '+p.lev+'×'; sel.appendChild(o)});
+  sel.value=c.aanbevolen||'agent_stabiel'; }
 async function poll(){try{render(await api('/api/state'))}catch(e){$('err').hidden=false;$('err').textContent='Geen verbinding met de bot-server. Draait server.py nog?'}}
 setInterval(poll,2000); poll(); window.addEventListener('resize',()=>S&&drawCurve(S.curve));
 
 $('b-start').onclick=async()=>{const r=await api('/api/start',{}); if(!r.ok){$('err').hidden=false;$('err').textContent=r.fout} poll()};
 $('b-more').onclick=()=>{allTrades=!allTrades; S&&render(S)};
 $('b-stop').onclick=async()=>{await api('/api/stop',{}); poll()};
-$('b-bt').onclick=()=>{$('bt-panel').hidden=!$('bt-panel').hidden; if(!$('bt-from').value) setTwoMonths();};
-$('bt-2m').onclick=setTwoMonths;
-$('bt-run').onclick=async()=>{ if(!$('bt-from').value) setTwoMonths();
+$('b-bt').onclick=()=>{$('bt-panel').hidden=!$('bt-panel').hidden; if(!$('bt-from').value) setAll();};
+$('bt-2m').onclick=setTwoMonths; $('bt-all').onclick=setAll; $('bt-yr').onclick=setYear;
+$('bt-run').onclick=async()=>{ if(!$('bt-from').value) setAll();
   const r=await api('/api/backtest',{start:$('bt-from').value,end:$('bt-to').value,profiel:$('bt-prof').value});
   if(!r.ok){$('err').hidden=false;$('err').textContent=r.fout} poll()};
 document.addEventListener('click',async e=>{const k=e.target.dataset&&e.target.dataset.resume; if(k){await api('/api/module/'+k+'/hervat',{}); poll();}});
 $('b-hervat').onclick=async()=>{await api('/api/hervat',{}); poll()};
+$('b-agent').onclick=async()=>{const r=await api('/api/config',{profiel:'agent_stabiel'}); if(!r.ok){$('err').hidden=false;$('err').textContent=r.fout;} poll()};
 $('d-tgtest').onclick=async()=>{$('d-msg').textContent='Testbericht versturen…'; const r=await api('/api/test_telegram',{}); $('d-msg').textContent=r.ok?'Verstuurd. Kijk in Telegram.':'Lukt niet: '+r.fout};
 $('d-cktest').onclick=async()=>{$('d-msg').textContent='Claude testen…'; const r=await api('/api/test_claude',{}); $('d-msg').textContent=r.ok?`Werkt. Antwoord: markt ${r.antwoord.markt}, kosten €${r.kosten_eur} (${r.tokens[0]} tokens in, ${r.tokens[1]} uit).`:'Lukt niet: '+r.fout};
 $('d-ckwis').onclick=async()=>{const r=await api('/api/config',{wis_claude:true}); $('d-msg').textContent=r.ok?'Claude key gewist.':r.fout; poll()};
