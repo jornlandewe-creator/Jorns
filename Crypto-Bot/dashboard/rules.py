@@ -48,6 +48,15 @@ RULES = [
     dict(strat='RSI-dip 1h', module='Trend-long', tf='1 uur',
          instap='RSI(7) onder 25 terwijl de munt boven zijn 200-uursgemiddelde staat, en BTC boven zijn 100-daags gemiddelde.', uit='RSI(7) boven 70, of BTC onder het 100-daags gemiddelde.',
          stop='Geen vaste stop (korte trades); bij hefboom ruim voor liquidatie.', grootte='1/30 van de module per munt x hefboom.'),
+    # ---------------- Agent winrate
+    dict(strat='Agent winrate', module='Agent winrate', tf='dag',
+         instap='Elke dag na het dagslot, per munt (BTC, ETH, SOL): alleen als BTC én de munt boven hun 200-daags gemiddelde staan, en de koers meer dan 2% boven '
+                'het 20- én het 50-daags gemiddelde sluit. Grootte = 60% / gemeten beweeglijkheid (30 dagen), plafond 1,5x (futures) of 1,0x (spot). Alleen long.',
+         uit='Deelwinst: bij +1 ATR (14 dagen) wordt 1/3 verkocht en gaat de stop naar break-even (+0,2%). De rest loopt mee tot het dagslot meer dan 2% onder het '
+             '50-daags gemiddelde komt, of tot BTC of de munt onder het 200-daags gemiddelde zakt.',
+         stop='2 ATR onder de instap, elke ronde bewaakt. Na de deelwinst: break-even. Bij hefboom ook de liquidatie-bescherming. '
+              'Account: noodstop (30% onder de top) en dagstop (25% binnen 24 uur).',
+         grootte='Een derde van de pot per munt (SOL pas na 200 dagen historie), elke maand weer gelijk getrokken. Getest: winrate rond 66%, gemiddelde winst +17%, gemiddeld verlies -7,5%.'),
     # ---------------- Agent
     dict(strat='Agent', module='Agent', tf='dag',
          instap='Elke dag na het dagslot (00:00 UTC), per munt (BTC, ETH, SOL): alleen als BTC én de munt boven hun 200-daags gemiddelde staan (hard marktfilter). '
@@ -71,6 +80,9 @@ RULES = [
          grootte='De helft van het totaal per munt; elke maand weer gelijk getrokken. Alle winst blijft in de pot.'),
 ]
 ALGEMEEN = [
+    'Profiel Agent winrate (v13, standaard): dezelfde poort als Agent maar als losse trades met deelwinst op +1 ATR en break-even stop. Dagdata 2018 - sep 2026: '
+    '45% per jaar, daling -24%, 14 trades per jaar, winrate 66%, profit factor 2,8. Buiten de steekproef (2023-2026): 33% per jaar. Winrate hoger dan 50% is geen '
+    'bewijs van kunde: wat telt is winrate x gemiddelde winst tegenover gemiddeld verlies (de verwachting per trade).',
     'Profiel Agent (v13): trend-ensemble x hard marktfilter x volatiliteitsdoel op BTC, ETH en SOL. Dagdata 2018 - sep 2026: 54% per jaar, daling -27%, '
     'ongeveer 9 trades per jaar, winrate 28-35% met gemiddelde winst rond +100% tegenover gemiddeld verlies rond -7%. Buiten de steekproef (2023-2026) 43% per jaar. '
     'Dezelfde code als live is doorgerekend met backtest_agent.py.',

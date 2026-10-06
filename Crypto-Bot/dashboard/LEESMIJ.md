@@ -9,7 +9,7 @@
 Laat de computer aan staan; de bot handelt alleen terwijl hij draait. Op de Mac houdt het startbestand
 de computer wakker zolang de bot draait.
 
-## Agent (standaardprofiel sinds v13)
+## Agent (sinds v13; standaardprofiel is Agent winrate, zie verderop)
 
 De bot is nu een **agent**: een programma dat zelfstandig beslist, uitvoert, zichzelf bewaakt en bij gevaar zelf ingrijpt.
 Je kunt hem draaien met het dashboard (`server.py`) of zonder (`python agent.py`, zie onderaan dit hoofdstuk). Beide gebruiken
@@ -60,6 +60,33 @@ Eerlijk:
   haalden in dezelfde replay 21-38% per jaar, maar die zijn op precies deze periode gekozen en dus niet eerlijk vergelijkbaar). Die 2,5 jaar waren
   een zijwaartse markt met scherpe dalingen, het slechtste weer voor trendvolgen. Het gemiddelde van 54% komt vooral uit 2019-2021 en 2023.
   Reken dus niet op 50% elk jaar; reken op een lage daling en op het meepakken van de volgende lange stijging.
+
+### Agent winrate (standaardprofiel): de meeste trades winnen
+Zelfde poort (BTC én munt boven 200-daags gemiddelde), zelfde volatiliteitsdoel, maar als losse trades met winstname:
+- Instap na het dagslot als de koers meer dan 2% boven het 20- én het 50-daags gemiddelde sluit. Stop 2 ATR onder de instap (elke ronde bewaakt).
+- **Deelwinst op +1 ATR**: 1/3 wordt verkocht en de stop gaat naar break-even. Daardoor eindigt een trade die eerst meeliep en daarna terugvalt niet
+  meer als verlies maar als kleine winst. De rest loopt mee tot het dagslot meer dan 2% onder het 50-daags gemiddelde komt of de poort dichtgaat.
+
+| | Per jaar | Grootste daling | Trades/jaar | Winrate | Gem. winst | Gem. verlies | Profit factor | 2023-2026 (controle) |
+|---|---|---|---|---|---|---|---|---|
+| **Agent winrate** | **45%** | **-24%** | 14 | **66%** | +17% | -7,5% | 2,8 | 33% per jaar, daling -23% |
+| Agent (zonder winstname) | 54% | -27% | 10 | 27% | +100% | -7% | 3,8 | 42% per jaar, daling -27% |
+
+Per jaar: 2018 -4%, 2019 +42%, 2020 +168%, 2021 +138%, 2022 0%, 2023 +99%, 2024 +17%, 2025 +2%, 2026 (t/m sep) +23%.
+Buurinstellingen (stop 1,5 tot 3 ATR, deel 25 tot 40%, doel 50 tot 70%) geven 40-50% per jaar, daling -22 tot -26%, winrate 64-68%.
+Echte bot-replay in stappen van 30 minuten, maart 2024 - sep 2026: 10% per jaar, daling -25%, winrate 64% (Agent zonder winstname: 15%, -27%;
+BTC vasthouden 13%, -53%). Die zijwaartse periode was voor beide agent-profielen mager; de daling bleef wel de helft kleiner dan van BTC.
+
+De prijs van de hoge winrate: ongeveer 9 procentpunt rendement per jaar minder dan de Agent zonder winstname, omdat een derde van elke grote
+winnaar al vroeg wordt verkocht. Daar staat een kleinere daling tegenover. Onderzocht en afgewezen (`onderzoek/agent/winrate.py`):
+- Alles verkopen op +1 ATR: winrate 72-79%, maar 17-26% per jaar met een daling van -33%. Veel kleine winsten, af en toe een grote klap.
+- Alleen dips kopen in een stijgende munt (RSI-dip, k ATR onder gemiddelde): winrate 60-70%, rendement 1-6% per jaar. Hoge winrate, geen winst.
+- Trailing stop op 3 ATR erbij: winrate iets hoger, rendement bijna gehalveerd.
+
+Belangrijk: een winrate boven 50% bewijst geen kunde en eronder geen geluk. Wat telt is de verwachting per trade: winrate x gemiddelde winst
+min (1 - winrate) x gemiddeld verlies. De Agent zonder winstname heeft met 27% winrate een grotere verwachting per trade (+22% van de inzet) dan
+Agent winrate met 66% (+9%). Beide zijn over 2018-2026 en in de controleperiode duidelijk positief; welke je kiest hangt af van wat je volhoudt.
+Veel mensen stoppen met een systeem dat 7 van de 10 keer verliest, ook als het werkt. Daarom is Agent winrate nu het standaardprofiel.
 
 ### Fail-safes (risico en zelfbescherming)
 Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:

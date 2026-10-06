@@ -15,3 +15,6 @@ Volgorde en wat er geleerd is:
 
 Eindkeuze (dashboard/agent_strategy.py): BTC+ETH+SOL, marktfilter BTC én munt boven 200-daags gemiddelde, ensemble 20/50/100 dagen met band 2%,
 volatiliteitsdoel 60% (30 dagen), plafond 1,5x (futures) of 1,0x (spot). Controle met de echte module-code: `dashboard/backtest_agent.py`.
+5. `winrate.py` / `winrate2.py`  Trade-niveau: deelwinst op +k ATR met break-even stop, alles verkopen op +k ATR, dips kopen. Deelwinst op +1 ATR (1/3) geeft
+              winrate 66% tegen ~9 punten minder rendement per jaar en een kleinere daling; alles verkopen op +1 ATR en dips kopen: hoge winrate, weinig rendement.
+              Dit werd het profiel Agent winrate (dashboard/modules.py, AgentWinModule).

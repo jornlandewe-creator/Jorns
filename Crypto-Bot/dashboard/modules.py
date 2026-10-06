@@ -11,7 +11,7 @@ from library import sma, rsi_mr, supertrend
 from library2 import trades_surge, vol_breakout
 import rotation as RT
 from trader import Trader, FEE, SLIP, FIN_DAY, AGG
-from agent_strategy import AGENT_COINS, AGENT_PARAMS, target_weight, explain
+from agent_strategy import AGENT_COINS, AGENT_PARAMS, target_weight, explain, realised_vol
 
 COINS = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'LINK', 'DOT']
 TF_MIN = {'30m': 30, '1h': 60, '4h': 240, '1d': 1440}
@@ -751,9 +751,96 @@ class AgentModule:
             s['qty'] = s['qty'] + q if f > 1 else s['qty'] - q; s['entry'] = price
 
 
+
+# ------------------------------------------------------------------ module 7: agent winrate (zelfde poort, trade-regels met deelwinst)
+
+class AgentWinModule(AgentModule):
+    """Agent winrate: dezelfde markt-poort als de Agent (BTC en munt boven 200-daags gemiddelde) en hetzelfde volatiliteitsdoel,
+    maar als losse trades met winstname, zodat de meeste trades winnen (in de test rond 67%):
+    - instap (na het dagslot): koers meer dan 2% boven het 20- én het 50-daags gemiddelde, grootte = 60% / beweeglijkheid (plafond)
+    - deelwinst: bij +1 ATR (14 dagen) wordt 1/3 verkocht en gaat de stop naar break-even (+0,2%)
+    - stop: 2 ATR onder de instap, bewaakt elke ronde (intradag)
+    - uit (na het dagslot): koers meer dan 2% onder het 50-daags gemiddelde, of de poort gaat dicht
+    Onderzoek: onderzoek/agent/winrate.py (dagdata 2018 - sep 2026)."""
+    name = 'Agent winrate'
+    WIN = dict(fast=20, slow=50, band=0.02, sl_atr=2.0, tp1_atr=1.0, tp1_frac=0.33, be=0.002, atr_n=14)
+    def __init__(self, capital, lev, log, state=None, cap=1.5, naam=None, coins=AGENT_COINS, params=None):
+        super().__init__(capital, lev, log, state, cap=cap, naam=naam, coins=coins, params=None)
+        self.p = dict(AGENT_PARAMS, **self.WIN, **(params or {}))
+        for s in self.st['sleeves'].values():
+            for k, v in dict(stop=0.0, tp1=0.0, hit=False, atr=0.0).items(): s.setdefault(k, v)
+    def _reset(self, s): s.update(pos=0, qty=0.0, entry=0.0, entry0=0.0, real=0.0, w=0.0, stop=0.0, tp1=0.0, hit=False, atr=0.0)
+    def _exit(self, b, c, s, price, reason, now):
+        super()._exit(b, c, s, price, reason, now); self._reset(s)
+    def _watch(self, feed, b, now):
+        """Elke ronde: stop (eerst, conservatief) en deelwinst, op de laatste stap (replay) of de huidige koers (live)."""
+        for c, s in self.st['sleeves'].items():
+            if not s['pos']: continue
+            ib = feed.intrabar(c); p = feed.price(c)
+            o, hi, lo = ib if ib else (p, p, p)
+            if s['stop'] > 0 and lo <= s['stop']:
+                self._exit(b, c, s, min(o, s['stop']), 'break-even stop' if s['hit'] else 'stop 2 ATR', now); continue
+            if not s['hit'] and s['tp1'] > 0 and hi >= s['tp1']:
+                q = b.amt(c, s['qty'] * self.p['tp1_frac'])
+                if q <= 0 or q >= s['qty']: s['hit'] = True; continue
+                fill = b.trade(s, c, -1, q, max(o, s['tp1'])); gain = q * (fill - s['entry']); s['cash'] += gain; s['real'] = s.get('real', 0.0) + gain
+                s['qty'] -= q; s['hit'] = True; s['stop'] = max(s['stop'], s['entry'] * (1 + self.p['be']))
+                self.log(f'{c}: 1/3 winst genomen @ {fill:,.4g} (+1 ATR), stop naar break-even')
+    def step(self, feed, b):
+        now = feed.now(); cap = self._cap(); p = self.p
+        self._watch(feed, b, now)
+        btc = feed.candles('BTC', '1d', n=p['gate_n'] + 30)
+        if len(btc) < p['gate_n']: return self.equity(feed)
+        day = str(btc.index[-1])
+        if day == self.st['last_day']: return self.equity(feed)
+        self.st['last_day'] = day
+        mth = pd.Timestamp(now).strftime('%Y-%m'); new_month = self.st['last_month'] != mth; self.st['last_month'] = mth
+        dcs = {c: feed.candles(c, '1d', n=p['min_hist'] + 30) for c in self.st['sleeves']}
+        elig = [c for c, d in dcs.items() if len(d) >= p['min_hist'] and can_trade(self, c)]
+        if new_month or set(elig) != set(self.st.get('elig') or []):
+            self.st['elig'] = elig; tot = self.equity(feed)
+            for c, s in self.st['sleeves'].items(): self._mark(s, feed.price(c))
+            for c, s in self.st['sleeves'].items():
+                if s['pos'] and c not in elig: self._exit(b, c, s, feed.price(c), 'munt doet niet meer mee', now)
+            for c, s in self.st['sleeves'].items(): s['cash'] = tot / len(elig) if c in elig else 0.0
+        btc_up = float(btc.close.iloc[-1]) > float(btc.close.iloc[-p['gate_n']:].mean())
+        for c, s in self.st['sleeves'].items():
+            dc = dcs[c]; price = feed.price(c)
+            if c not in elig:
+                self.st['info'][c] = dict(reden='te weinig historie of niet verhandelbaar', w=0, dag=day[:10]); continue
+            cl = dc.close.values.astype(float)
+            coin_up = cl[-1] > cl[-p['gate_n']:].mean(); gate = btc_up and coin_up
+            f = cl[-p['fast']:].mean(); sl_ = cl[-p['slow']:].mean()
+            above = cl[-1] > f * (1 + p['band']) and cl[-1] > sl_ * (1 + p['band']); below = cl[-1] < sl_ * (1 - p['band'])
+            v = realised_vol(cl, p['vol_n']); scale = min(cap, p['vol_target'] / v) if (v and np.isfinite(v) and v > 0) else 0.0
+            if s['pos'] and (below or not gate):
+                self._exit(b, c, s, price, 'onder 50-daags gemiddelde' if below else 'poort dicht (onder 200-daags gemiddelde)', now)
+            elif not s['pos'] and gate and above and scale > 0 and not news_blocked(getattr(self, 'news', None), 'long', c, now):
+                a = float(atr(dc.high.values.astype(float), dc.low.values.astype(float), cl, p['atr_n'])[-1])
+                eq = self._eq(c, s, price); q = b.amt(c, eq * scale * 0.995 / price)
+                if q > 0 and np.isfinite(a) and a > 0:
+                    fill = b.trade(s, c, 1, q, price)
+                    s.update(pos=1, qty=q, entry=fill, entry0=fill, real=0.0, w=round(scale, 3), atr=a, stop=fill - p['sl_atr'] * a, tp1=fill + p['tp1_atr'] * a, hit=False)
+                    self.log(f'{c} gekocht @ {fill:,.4g}: boven 20- en 50-daags gemiddelde, inzet {scale*100:.0f}% (beweeglijkheid {v*100:.0f}%), stop {s["stop"]:,.4g}, deelwinst bij {s["tp1"]:,.4g}')
+            self.st['info'][c] = dict(reden='trend' if gate else ('BTC onder 200-daags gemiddelde' if not btc_up else 'munt onder 200-daags gemiddelde'),
+                                      gate=int(gate), boven=int(above), vol=round(v, 3) if v == v else None, schaal=round(scale, 3), w=s.get('w', 0), dag=day[:10])
+        return self.equity(feed)
+    def positions(self, feed):
+        return [dict(module=self.name, strat=self.name, coin=c, side='long', entry=s.get('entry0') or s['entry'], stop=s['stop'] or None,
+                     pnl=s['qty'] * (feed.price(c) - s['entry']) + s.get('real', 0.0), gewicht=s.get('w'), deelwinst=s.get('hit')) for c, s in self.st['sleeves'].items() if s['pos']]
+    def scale(self, feed, b, f, now, reason):
+        super().scale(feed, b, f, now, reason)
+        for s in self.st['sleeves'].values():                    # na bijstellen blijven stop en deelwinstniveau op koersniveau staan
+            if not s['pos']: self._reset(s)
+
+
 # ------------------------------------------------------------------ systeem
 
 PROFILES = {
+    # Agent winrate (v13): zelfde poort en volatiliteitsdoel als Agent, maar losse trades met deelwinst op +1 ATR en break-even stop:
+    # winrate rond 67% in plaats van 30%, tegen ongeveer 8 procentpunt minder rendement per jaar en een kleinere daling. Zie onderzoek/agent/winrate.py.
+    'agent_winrate':  dict(naam='Agent winrate', lev=1.5, brake=None, stop=0.30, sysfilter=False, weights=(0, 0, 0, 0, 0, 0, 1), agent=dict(cap=1.5), dagstop=0.25,
+                           verwacht=dict(dag='0,10%', maand='+3,2%', jaar='45% (2018-2026; 2023-2026: 33%)', daling='−24%', winrate='66%')),
     # Agent (v13): trend-ensemble x hard marktfilter x volatiliteitsdoel op BTC+ETH+SOL. Dagdata 2018 - sep 2026, kosten 0,05% + 0,03% per kant,
     # buiten de steekproef (2023-2026) gecontroleerd. Zie LEESMIJ.md "Agent" en backtest_agent.py (zelfde code als live).
     'agent':          dict(naam='Agent', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.5), dagstop=0.25,
@@ -791,7 +878,7 @@ PROFILES = {
 }
 PAUSE_DAYS = 14
 # Gezondheidsgrens per module, op 1x-basis: ongeveer 1,5x de slechtste daling uit de tests.
-MOD_LIMIT = {'btc': 0.20, 'ls': 0.45, 'vol': 0.25, 'trend': 0.25, 'hold': None, 'agent': None}
+MOD_LIMIT = {'btc': 0.20, 'ls': 0.45, 'vol': 0.25, 'trend': 0.25, 'hold': None, 'agent': None, 'agentwin': None}
 MOD_PAUSE_DAYS = 30
 
 class System:
@@ -801,7 +888,7 @@ class System:
         self.log = log; self.weights = weights; self.risk_parity = risk_parity
         st = state or {}
         self.mods = []
-        names = ['btc', 'ls', 'vol', 'trend', 'hold', 'agent']
+        names = ['btc', 'ls', 'vol', 'trend', 'hold', 'agent', 'agentwin']
         for nm, w in zip(names, weights):
             if w <= 0: continue
             s = st.get(nm)
@@ -811,6 +898,7 @@ class System:
             elif nm == 'vol': m = VolModule(cap, lev, log, s)
             elif nm == 'trend': m = TrendModule(cap, lev, log, s, scaleout=trend_scaleout)
             elif nm == 'agent': m = AgentModule(cap, lev, log, s, **(agent or {}))
+            elif nm == 'agentwin': m = AgentWinModule(cap, lev, log, s, **(agent or {}))
             else: m = HoldModule(cap, lev, log, s, **(hold or {}))
             m.key = nm; self.mods.append(m)
         self.retire = []                                          # modules uit een vorig profiel: posities sluiten, geld overdragen
@@ -822,6 +910,7 @@ class System:
                 elif nm == 'vol': m = VolModule(0.0, lev, log, s)
                 elif nm == 'trend': m = TrendModule(0.0, lev, log, s, scaleout=trend_scaleout)
                 elif nm == 'agent': m = AgentModule(0.0, lev, log, s)
+                elif nm == 'agentwin': m = AgentWinModule(0.0, lev, log, s)
                 else: m = HoldModule(0.0, lev, log, s)
                 m.key = nm; self.retire.append(m)
         self.meta = st.get('meta') or dict(start_capital=capital, equity=[], last_rebalance=None, started=None)
@@ -997,7 +1086,7 @@ class System:
                 for key, s in m.st['sleeves'].items():
                     c = key.split(':')[1]
                     if s['pos'] and c in sl: m._exit(b, key, s, feed.price(c), 'nieuws', now); closed.append(f'Trend {c}')
-            elif m.key == 'agent':
+            elif m.key in ('agent', 'agentwin'):
                 for c, s in m.st['sleeves'].items():
                     if s['pos'] and c in sl: m._exit(b, c, s, feed.price(c), 'nieuws', now); closed.append(f'Agent {c}')
         nw['log'] = (nw.get('log', []) + [[str(now), act.get('uitleg', []), closed]])[-50:]

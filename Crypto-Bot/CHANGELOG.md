@@ -1,6 +1,9 @@
 # Changelog Crypto-Bot
 
 ## v13 (6 okt 2026): Agent
+- **Agent winrate** (standaardprofiel): zelfde poort en volatiliteitsdoel als Agent, maar losse trades met deelwinst op +1 ATR (1/3 eruit,
+  stop naar break-even) en stop 2 ATR. Dagdata 2018 - sep 2026: 45% per jaar, daling -24%, winrate 66% (Agent zonder winstname: 54%, -27%, 27%).
+  Onderzoek in onderzoek/agent/winrate.py: alles verkopen op +1 ATR en dips kopen geven wel een hoge winrate maar weinig rendement.
 - Nieuw standaardprofiel **Agent**: BTC+ETH+SOL, hard marktfilter (BTC en munt boven 200-daags gemiddelde), trend-ensemble
   20/50/100 dagen met 2% band, volatiliteitsdoel 60% (30 dagen), plafond 1,5x. Dagdata 2018 - sep 2026: 54% per jaar, daling -27%
   (Trend-vasthouden: 33% per jaar, daling -62%). Controle 2023-2026 (niet gebruikt bij het kiezen): 42% per jaar, daling -27%.
