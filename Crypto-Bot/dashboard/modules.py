@@ -694,12 +694,14 @@ class AgentModule:
         if dq <= 0: return
         if abs(target_notional) > abs(cur):                       # vergroten (of openen) in de richting van de positie
             fill = b.trade(s, c, side, dq, price)
-            if s['pos']: s['entry'] = (s['entry'] * s['qty'] + fill * dq) / (s['qty'] + dq); s['qty'] += dq
+            if s['pos']:
+                s['entry'] = (s['entry'] * s['qty'] + fill * dq) / (s['qty'] + dq); s['qty'] += dq
+                self.log(f'{c} {"long" if side > 0 else "short"} vergroot naar {s["qty"] * price / max(eq, 1e-9) * 100:.0f}% ({why})')
             else: s.update(pos=side, qty=dq, entry=fill, entry0=fill, real=0.0); self.log(f'{c} {"gekocht" if side > 0 else "short geopend"} @ {fill:,.4g} ({why})')
         else:                                                     # verkleinen
             if dq >= s['qty']: self._exit(b, c, s, price, why, now); return
             fill = b.trade(s, c, -side, dq, price); pnl = side * dq * (fill - s['entry']); s['cash'] += pnl; s['real'] = s.get('real', 0.0) + pnl
-            s['qty'] -= dq; self.log(f'{c} verkleind naar {s["qty"] * price / max(eq, 1e-9) * 100:.0f}% ({why})')
+            s['qty'] -= dq; self.log(f'{c} {"long" if side > 0 else "short"} verkleind naar {s["qty"] * price / max(eq, 1e-9) * 100:.0f}% ({why})')
     def step(self, feed, b):
         now = feed.now(); cap = self._cap()
         for c, s in self.st['sleeves'].items():            # liquidatie-bescherming (elke ronde): longs bij hefboom, shorts altijd
@@ -867,6 +869,11 @@ PROFILES = {
     'agent_stabiel_spot': dict(naam='Agent stabiel spot', lev=1.0, brake=None, stop=0.25, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.20,
                            agent=dict(cap=1.0, shorts=False, params=dict(tilt=True, pyramid=True, don_mix=0.5, vol_target=0.5)),
                            verwacht=dict(dag='0,11%', maand='+3,4%', jaar='44% (2018-2026; 2023-2026: 34%)', daling='−20%', winrate='29%')),
+    # Agent bear (v13): Agent stabiel met shorts op volle grootte. Verdient meer in bear markets (2022 +40%, okt 2025 - jul 2026 +18%) tegen een
+    # diepere daling (-33%) en minder buiten de steekproef (37% i.p.v. 44% per jaar): bear-market-rally's doen volle shorts pijn. Zie onderzoek/agent/bear.py.
+    'agent_bear':     dict(naam='Agent bear', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.25,
+                           agent=dict(cap=1.5, shorts=True, params=dict(tilt=True, pyramid=True, don_mix=0.5, short_mult=1.0)),
+                           verwacht=dict(dag='0,13%', maand='+4,2%', jaar='63% (2018-2026; 2023-2026: 37%)', daling='−33%', winrate='31%')),
     # Agent plus (v13): Agent long/short + kanteling naar de sterkste munt (56 dagen, x1,25 / x0,75) + 25% extra op een 50-daagse top, binnen het plafond.
     # Beide ingrediënten verbeteren in alle buurinstellingen (onderzoek/agent/other2.py). Dagdata 2018 - sep 2026: zie LEESMIJ.
     'agent_plus':     dict(naam='Agent plus', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.25,

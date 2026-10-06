@@ -1,6 +1,8 @@
 # Changelog Crypto-Bot
 
 ## v13 (6 okt 2026): Agent
+- Keuzeprofiel **Agent bear**: shorts op volle grootte (2022 +40%, bear okt 2025 - jul 2026 +18%, daling -33%). Logboek meldt nu
+  ook het vergroten van posities. Onderzoek short-grootte en bevestiging in onderzoek/agent/bear.py.
 - **Agent stabiel** (standaardprofiel) en Agent stabiel spot: gekozen op rendement per eenheid daling. Long-inzet half trend-ensemble, half
   Donchian-uitbraak 55/20, kanteling + pyramide, shorts op kwart grootte (onderzoek/agent/stable.py).
 - **Agent plus** (standaardprofiel): Agent long/short + kanteling naar de sterkste munt (56 dagen, x1,25 / x0,75) + 25% extra inzet op een

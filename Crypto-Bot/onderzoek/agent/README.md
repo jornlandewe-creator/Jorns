@@ -37,3 +37,6 @@ volatiliteitsdoel 60% (30 dagen), plafond 1,5x (futures) of 1,0x (spot). Control
               shorts op kwart grootte: Calmar 2,3 (Agent plus 1,95, Agent 2,0), slechtste maand -10%, controle 2023-2026 44%/jr met daling -22%.
               Lager volatiliteitsdoel (0,5) zonder shorts: Calmar 2,4, daling -22%. Crash-exit op 2 ATR en drawdown-remmen: slechter.
               Dit werd het profiel Agent stabiel (standaard) en Agent stabiel spot.
+11. `bear.py`   Short-grootte en bear-bevestiging op de bear van okt 2025 - jul 2026 en de hele historie. Grotere shorts verdienen meer in bears
+              (x1,0: +18% in 2025-26, +40% in 2022) maar geven een diepere daling (-33%) en minder buiten de steekproef (37% tegen 44%/jr),
+              door bear-market-rally's. Zonder bevestiging (SMA200 hoeft niet te dalen): slechter. Dit werd het keuzeprofiel Agent bear.

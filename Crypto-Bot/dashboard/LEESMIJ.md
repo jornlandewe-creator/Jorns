@@ -177,6 +177,26 @@ Getest en afgewezen voor dit doel: een snellere crash-uitstap (2 ATR onder de 20
 Eerlijk: ook dit profiel verloor in de test tijdelijk 26% (spot: 20%). Minder daling dan dat kan alleen met minder inzet, en dat kost
 evenredig rendement (volatiliteitsdoel 0,4: 43-45% per jaar bij -18 tot -20%). Die knop heb je zelf: profiel Agent rustig of Agent stabiel spot.
 
+### Verdienen in een bear market: hoe groot moeten de shorts zijn?
+Voorbeeld: 1 februari - 1 juli 2026, BTC -22% (met twee rally's van +25% ertussen). Agent stabiel stond die hele periode short op
+BTC, ETH en SOL (de voorwaarden waren alle 151 dagen waar) en kwam uit op +4 tot +6%. Waarom niet meer: de shorts zijn een kwart van de
+grootte, de inzet krimpt bij hoge beweeglijkheid (60-100% in die maanden), en tijdens de rally's van maart en april-mei stapte het
+ensemble deels uit, zoals het hoort. Over de hele bear (1 oktober 2025 - 1 juli 2026, BTC -47%) kwam Agent stabiel uit op -2%:
+oktober-december 2025 stond hij in cash omdat het 200-daags gemiddelde nog niet daalde (de bear was nog niet bevestigd).
+
+Grotere shorts verdienen meer in bears, maar kosten over negen jaar (`onderzoek/agent/bear.py`):
+
+| Shorts | Per jaar | Grootste daling | Calmar | 2023-2026 | 2018 | 2022 | Bear okt 2025 - jul 2026 | Feb - jul 2026 |
+|---|---|---|---|---|---|---|---|---|
+| kwart (Agent stabiel) | 63% | -28% | 2,3 | 44% | +9% | +11% | -2% | +4% |
+| half (Agent plus / long/short) | 64% | -30% | 2,2 | 42% | +19% | +22% | +5% | +7% |
+| vol (Agent bear) | 63% | -33% | 1,9 | 37% | +39% | +40% | +18% | +11% |
+| vol, zonder bevestiging | 54% | -42% | 1,3 | 23% | +52% | +44% | +26% | +11% |
+
+De bevestiging (het 200-daags gemiddelde van BTC moet dalen) kost rendement in het begin van elke bear, maar voorkomt shorts in elke
+gewone correctie: zonder die eis zakt het rendement buiten de steekproef naar 23% per jaar. Kies zelf: Agent stabiel voor de kleinste
+daling, **Agent bear** als je in bear markets wilt verdienen en een daling van -33% accepteert.
+
 ### Fail-safes (risico en zelfbescherming)
 Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:
 - **Noodstop**: account 35% onder zijn top (Agent spot 30%, Agent rustig 25%) -> alles dicht, 14 dagen pauze, daarna halve inzet tot een nieuwe top.
