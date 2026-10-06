@@ -1,5 +1,10 @@
 # Changelog Crypto-Bot
 
+## v14 (6 okt 2026)
+- Versienummer en actief profiel staan nu in de kop van het dashboard; de pagina wordt nooit meer uit het browsergeheugen geladen.
+- De startbestanden openen de browser pas als de server echt draait (geen "kan geen verbinding maken" meer bij de eerste start).
+- Dashboard vereenvoudigd (één aanbevolen profiel Agent, oude profielen ingeklapt), backtest-profiellijst gerepareerd, knop Overstappen op Agent.
+
 ## v13 (6 okt 2026): Agent
 - Keuzeprofiel **Agent bear**: shorts op volle grootte (2022 +40%, bear okt 2025 - jul 2026 +18%, daling -33%). Logboek meldt nu
   ook het vergroten van posities. Onderzoek short-grootte en bevestiging in onderzoek/agent/bear.py.

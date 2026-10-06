@@ -429,7 +429,16 @@ def api_backtest():
 # ------------------------------------------------------------------ API
 
 @app.get('/')
-def index(): return send_from_directory(app.static_folder, 'index.html')
+def index():
+    r = send_from_directory(app.static_folder, 'index.html')
+    r.headers['Cache-Control'] = 'no-store, max-age=0'            # nooit een oude pagina uit het browsergeheugen tonen
+    return r
+
+
+@app.after_request
+def no_cache(r):
+    if request.path.startswith('/api/'): r.headers['Cache-Control'] = 'no-store'
+    return r
 
 
 @app.get('/api/state')
@@ -685,6 +694,16 @@ def main():
     threading.Thread(target=supervisor, daemon=True).start()
     threading.Thread(target=news_loop, daemon=True).start()
     autostart()
+    if os.getenv('OPEN_BROWSER') == '1':                           # startbestanden: browser pas openen als de server echt draait
+        def _open():
+            import webbrowser, urllib.request
+            for _ in range(60):
+                time.sleep(1)
+                try: urllib.request.urlopen(f'http://127.0.0.1:{port}/api/state', timeout=2); break
+                except Exception: continue
+            try: webbrowser.open(f'http://localhost:{port}')
+            except Exception: pass
+        threading.Thread(target=_open, daemon=True).start()
     app.run(host='127.0.0.1', port=port, debug=False, threaded=True, use_reloader=False)
 
 

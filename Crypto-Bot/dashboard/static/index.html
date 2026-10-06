@@ -108,7 +108,7 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0}
 <body>
 <div class="wrap">
   <header>
-    <h1>Crypto Portfolio Bot</h1><span class="pill" id="versie" title="Versie van de bot"></span>
+    <h1>Crypto Portfolio Bot</h1><span class="pill" id="versie" title="Versie van de bot"></span><span class="pill" id="prof-now" title="Actief profiel"></span>
     <span class="pill" id="st-status">gestopt</span>
     <span class="pill" id="st-mode">paper</span>
     <span class="sub" id="st-bron"></span>
@@ -450,6 +450,7 @@ function bars(el,data){
 
 function render(s){
   if(s.versie) $('versie').textContent='versie '+s.versie;
+  {const pp=(cfg.profielen||{})[cfg.profiel]; $('prof-now').textContent='profiel: '+(pp?pp.naam:cfg.profiel);}
   S=s; cfg=s.config; fillCfg(cfg,s.exchanges);
   const run=s.status==='draait'||s.status==='start...'||s.status==='backtest';
   $('st-status').textContent=s.status; $('st-status').classList.toggle('on',run);
