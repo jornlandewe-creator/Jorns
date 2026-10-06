@@ -11,7 +11,7 @@ const { buildUploadSet, writeUploadOrder, writeReport, writeContext, writeReadme
 const { log, mkdir, slug } = require('./lib/util');
 const { renderPreview } = require('./lib/preview');
 const { renderShowcase } = require('./lib/showcase');
-const { captureFeatures, recordMobile } = require('./lib/extra');
+const { captureFeatures, recordMobile, captureLongPages } = require('./lib/extra');
 const { contactSheet, clipPublic } = require('./lib/clips');
 const { planShots, writeDirectorBrief } = require('./lib/director');
 
@@ -105,6 +105,9 @@ function parseArgs() {
       log('\n[features] key features zoeken (aanbod, USP, cijfers, reviews, prijzen)...');
       features = await captureFeatures(page, cfg, analyses, dirs).catch((e) => { log('  ! features: ' + e.message.split('\n')[0]); return []; });
     }
+    // 2c. Volledige pagina's (van boven tot onder) voor de lange scroll
+    log('\n[pagina] volledige pagina\'s vastleggen...');
+    const longPages = await captureLongPages(page, cfg, analyses, dirs).catch((e) => { log('  ! lange pagina: ' + e.message.split('\n')[0]); return []; });
 
     // 3. Clips
     const plan = planClips(analyses, cfg);
@@ -135,7 +138,7 @@ function parseArgs() {
     try {
       const cf = path.join(out, 'website-reference-context.json');
       const cj = JSON.parse(fs.readFileSync(cf, 'utf8'));
-      cj.key_features = features; cj.key_feature_groups = (features && features.groups) || []; cj.mobile_stills = mobileStills;
+      cj.key_features = features; cj.key_feature_groups = (features && features.groups) || []; cj.mobile_stills = mobileStills; cj.long_pages = longPages;
       fs.writeFileSync(cf, JSON.stringify(cj, null, 1));
       if (features.length) fs.appendFileSync(path.join(out, 'CAPTURE-REPORT.md'), '\n## Key features (close-ups)\n\n' + features.map((f) => `- ${f.no}. [${f.kind}] "${f.text}" · pagina ${f.page} · \`${f.file}\``).join('\n') + '\n');
     } catch (e) { log('! context aanvullen: ' + e.message); }

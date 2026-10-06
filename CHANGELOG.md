@@ -1,5 +1,15 @@
 # Changelog
 
+## v20.3
+
+- Live preview zonder flikkering: elke beeldlaag heeft twee buffers. Het volgende frame laadt onzichtbaar en wordt pas getoond als het er is, dus nooit een leeg of half geladen frame.
+- Schoner standaardbeeld: watermerk-logo in de achtergrond uit, spiegeling onder vlakken uit, gloed uit, rim light uit, RGB-split en lens-CA uit, flits zachter. Alles blijft aan te zetten onder Look en Effecten.
+- Grondschaduw alleen onder pagina's, laptop en telefoon (niet onder logo of knop) en nooit als een close-up het beeld vult.
+- Twee nieuwe shots, standaard aan: **Pull-back** (begint stil in macro op het logo of de knop, trekt terug tot de hele hero in beeld staat) en **Lange scroll** (de volledige pagina van boven tot onder als hoog vlak, de camera rijdt er rustig langs). Pagina-spin staat standaard uit.
+- Volledige pagina's worden nu betrouwbaar vastgelegd: schermvullende screenshots per scrollstap, na de reveals, aan elkaar geplakt met de sticky header maar één keer (`pages/paginaN_lang.jpg`, `long_pages` in de context). Een full-page screenshot van de browser ging bij sites met scroll-effecten vaak mis. *Features opnieuw zoeken* in de Studio maakt ze ook voor bestaande projecten.
+- In het shotpaneel kies je bij de lange scroll welke pagina (Snel kiezen).
+
+
 ## v20.2
 
 - Fix: bij de feature-carrousel schoof de volgende pagina al in beeld terwijl de vorige er nog stond (pagina's over elkaar). De glide-overgang verkortte de wisselafstand tot 60%; de wissel-keyframes zijn daar nu van uitgezonderd en de afstand wordt uit de echte schermranden berekend. Dit zat ook al in v19.1.

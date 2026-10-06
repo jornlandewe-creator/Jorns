@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { launch } = require('./lib/browser');
-const { captureFeatures } = require('./lib/extra');
+const { captureFeatures, captureLongPages } = require('./lib/extra');
 const dir = path.resolve(process.argv[2] || '.');
 (async () => {
   const cf = path.join(dir, 'website-reference-context.json');
@@ -12,9 +12,10 @@ const dir = path.resolve(process.argv[2] || '.');
   const { browser, context } = await launch(cfg);
   const page = await context.newPage();
   fs.rmSync(path.join(dir, 'features'), { recursive: true, force: true });
-  const analyses = ctx.pages.map((p) => ({ url: p.url, pageNo: p.page }));
+  const analyses = ctx.pages.map((p) => ({ url: p.url, pageNo: p.page, header_height: p.header_height }));
   const f = await captureFeatures(page, cfg, analyses, { out: dir });
   ctx.key_features = f; ctx.key_feature_groups = f.groups || [];
+  ctx.long_pages = await captureLongPages(page, cfg, analyses, { out: dir, pages: path.join(dir, 'pages') });
   fs.writeFileSync(cf, JSON.stringify(ctx, null, 1));
   await browser.close();
   const a = path.join(dir, 'showcase', '_assets', 'assets.json'); if (fs.existsSync(a)) fs.rmSync(a);

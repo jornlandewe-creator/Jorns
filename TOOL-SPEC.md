@@ -44,6 +44,7 @@ Shot-plan van de preview: establish (hero-clip, dolly-in, focus op CTA) → inte
 - Engine: `#ground`-laag met grondschaduwen (geprojecteerde bbox van page/lid/phone/crop), rim-overlay per surface (opacity uit de normaal), glasgradient in `lid.extra`/`body.extra`, `#cap`-laag met captions (Inter uit `_assets/fonts`, maskeer-reveal, scrim), achtergrond `mesh`, instelbaar vignet.
 - Render: `grade` (curves + eq) vóór de korrel; `supersample` 1-2 via deviceScaleFactor, terug naar doelresolutie met Lanczos (sharp).
 - Studio: presets pro/clean/hype/insane, tekst-in-beeld (standaard uit), look-sliders, caption per shot, kwaliteit ultra.
+- v20.3: `captureLongPages()` in `lib/extra.js` (segmenten van `height - header_height` px, sticky header één keer, `long_pages` in de context); shots `pullback` en `longscroll` (hoog `plane`-object met `h = paginahoogte`); live preview met dubbele `<img>`-buffers per laag in `setImage`.
 - v20.1: `drift` (zweving op `#world` en `#ground`, sinussen met periodes 10-33 s), `sweep` (sheen-positie loopt per object van links naar rechts over de looptijd van zijn keyframes), `W.features` neemt het item (niet de rij) als groep en de itemtekst als feature-tekst.
 
 ## 2f. Nieuw in v16
