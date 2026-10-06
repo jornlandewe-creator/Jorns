@@ -111,7 +111,9 @@ function startRender(name, params, quality) {
   const job = newJob('render', name);
   const dir = path.join(OUT, name);
   const settings = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'settings.json'), 'utf8')); } catch (e) { return {}; } })();
-  renderShowcase(dir, { params, maxSubframes: quality === 'draft' ? 4 : (settings.maxSubframes || 40), workers: settings.workers, onProgress: (p) => { job.pct = p.pct; job.eta = p.frame > 5 ? Math.round((p.elapsed / p.frame) * (p.total - p.frame)) : null; }, shouldStop: () => job.stop })
+  // concept = snel (weinig motion blur), final = volle motion blur, ultra = final + supersampling (1,5x) voor de strakste randen
+  const supersample = quality === 'ultra' ? (settings.supersample || 1.5) : 1;
+  renderShowcase(dir, { params, maxSubframes: quality === 'draft' ? 4 : (settings.maxSubframes || 40), supersample, workers: settings.workers, onProgress: (p) => { job.pct = p.pct; job.eta = p.frame > 5 ? Math.round((p.elapsed / p.frame) * (p.total - p.frame)) : null; }, shouldStop: () => job.stop })
     .then((r) => { job.status = 'done'; job.pct = 100; job.result = { file: path.basename(r.file), url: `/p/${encodeURIComponent(name)}/showcase/${encodeURIComponent(path.basename(r.file))}` }; })
     .catch((e) => { job.status = job.stop ? 'stopped' : 'error'; job.error = e.message; });
   return job;

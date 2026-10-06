@@ -1,6 +1,6 @@
 {
   "name": "website-motion-studio",
-  "version": "19.1.0",
+  "version": "20.0.0",
   "description": "Website → stills + echte interactie-clips → map voor ChatGPT en Higgsfield/Seedance",
   "main": "studio.js",
   "bin": {

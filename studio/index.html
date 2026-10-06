@@ -8,9 +8,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/studio/icon-32.png">
 <link rel="apple-touch-icon" href="/studio/icon-180.png">
 <style>
-:root{--bg:#0e0e10;--panel:#161618;--panel2:#1d1d20;--line:#2a2a2e;--text:#ececf0;--muted:#8d8d96;--accent:#ff7a2f;--accent2:#ffb07a;--ok:#4ade80;--err:#f87171}
+:root{--bg:#0b0b0d;--panel:#131315;--panel2:#1a1a1d;--line:#26262a;--text:#ededf1;--muted:#8a8a94;--accent:#ff7a2f;--accent2:#ffb07a;--ok:#4ade80;--err:#f87171}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13.5px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#2c2c31;border-radius:8px}::-webkit-scrollbar-track{background:transparent}
 button,input,select{font:inherit;color:inherit}
 .app{display:grid;grid-template-columns:300px 1fr 340px;height:100vh}
 aside,.controls{background:var(--panel);border-right:1px solid var(--line);overflow:auto;padding:20px}
@@ -28,7 +29,8 @@ h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 input[type=text],input[type=url],select{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;width:100%}
 input[type=url]:focus{border-color:var(--accent)}
-.btn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;transition:background .2s,border-color .2s}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+.btn:active{transform:translateY(1px)}
 .btn:hover{border-color:#44444a}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#1a0d05;font-weight:650}
 .btn.primary:hover{background:#ff8b47}
@@ -45,7 +47,7 @@ input[type=url]:focus{border-color:var(--accent)}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s}
 .log{font:11px/1.4 ui-monospace,Menlo,monospace;color:var(--muted);max-height:140px;overflow:auto;white-space:pre-wrap}
 main{display:flex;flex-direction:column;min-width:0}
-.stagewrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#18181b,#0b0b0c)}
+.stagewrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#151518,#09090a)}
 .frame{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px #2a2a2e}
 .frame iframe{border:0;transform-origin:0 0;position:absolute;left:0;top:0;background:#111}
 .empty{color:var(--muted);text-align:center;max-width:360px}
@@ -65,7 +67,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .ctl .lab em{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
 .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
 .seg button{flex:1;border:0;background:transparent;border-radius:7px;padding:7px 0;cursor:pointer;color:var(--muted)}
-.seg button.on{background:#2c2c31;color:var(--text)}
+.seg button.on{background:#2c2c31;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.4)}
 .tog{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #202023}
 .sw{position:relative;width:38px;height:22px;border-radius:22px;background:#333338;cursor:pointer;transition:background .2s;flex:none}
 .sw::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
@@ -75,7 +77,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .renders a{color:var(--accent2)}
 .muted{color:var(--muted);font-size:12px}
 .presets{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.presets .btn{padding:8px 6px;font-size:12px}
+.presets .btn{padding:8px 4px;font-size:12px}
 #topprog{position:fixed;left:0;top:0;height:3px;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:50;transition:width .6s;box-shadow:0 0 10px var(--accent)}
 #renpill{display:none;margin:0 0 12px;padding:9px 12px;border-radius:10px;background:#221710;border:1px solid #4a2c18;font-size:12px;cursor:pointer}
 #renpill .bar{margin:6px 0 0}
@@ -199,6 +201,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
           <div class="focus" id="fb_focus"><img alt=""><i class="box"></i><i class="dot"></i></div>
           <div class="row" style="margin-top:6px"><button class="btn sm" id="fb_focusclear">Focus automatisch</button></div></div>
         <div class="sec muted" id="fb_note" style="font-size:12px"></div>
+        <div class="sec" id="fb_capsec"><div class="lab">Tekst in beeld <em id="fb_caphint"></em></div>
+          <div class="row"><input type="text" id="fb_captext" placeholder="Automatisch (leeg laten)" style="flex:1"><button class="btn sm" id="fb_capoff" title="Geen tekst bij dit shot">Geen</button></div>
+          <input type="text" id="fb_capsub" placeholder="Kleine regel erboven (optioneel)" style="margin-top:6px"></div>
         <details class="grp" id="fb_framegrp"><summary>Kadrering (zoom, verschuiven, draai)</summary>
           <div class="muted" style="font-size:11px;margin:4px 0">Of sleep in de preview om te verschuiven en scroll om te zoomen.</div>
           <div id="fb_sliders"></div>
@@ -208,7 +213,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       <div class="ctl"><textarea id="brief" rows="2" placeholder="Regie-idee, bijv: rustig en premium, 15 sec, meer laptop, met crazy shots, geen muziek" style="width:100%;box-sizing:border-box;background:#18181b;color:#eee;border:1px solid #333;border-radius:10px;padding:9px;font:inherit;font-size:13px;resize:vertical"></textarea>
         <div class="row" style="margin-top:6px"><button class="btn primary" id="briefgo" style="flex:1">Toepassen</button><button class="btn" id="briefclaude" title="Bewaart je idee bij het project en kopieert een opdracht voor Claude Desktop">Naar Claude</button></div>
         <div id="briefout" class="muted" style="font-size:12px;margin-top:6px"></div></div>
-      <div class="presets"><button class="btn" data-preset="clean">Clean</button><button class="btn" data-preset="hype">Hype</button><button class="btn" data-preset="insane">Insane</button></div>
+      <div class="presets" style="grid-template-columns:1fr 1fr 1fr 1fr"><button class="btn" data-preset="pro" title="Standaard: strak, rustig, premium">Pro</button><button class="btn" data-preset="clean">Clean</button><button class="btn" data-preset="hype">Hype</button><button class="btn" data-preset="insane">Insane</button></div>
       <div class="ctl" style="margin-top:12px"><div class="lab">Edit <em id="editinfo"></em></div>
         <div class="row" style="margin-top:8px"><button class="btn" id="newedit" style="flex:1">Nieuwe edit 🎬</button><button class="btn" id="dice" title="Willekeurige variant" style="padding:6px 12px">🎲</button><button class="btn" id="clearedit" title="Terug naar vaste volgorde + schakelaars">Vast</button></div>
         <div class="row" style="margin-top:6px"><span class="muted" style="font-size:11px">Variant</span><input type="range" id="variation" min="0" max="50" step="1" style="flex:1"><em id="varv" class="muted" style="font-size:11px"></em></div></div>
@@ -218,10 +223,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     </div>
     <div class="tab" data-tab="look" hidden>
       <div class="ctl"><div class="lab">Formaat</div><div class="seg" id="format"><button data-v="9:16">9:16</button><button data-v="4:5">4:5</button><button data-v="1:1">1:1</button></div></div>
-      <div class="ctl"><div class="lab">Achtergrond</div><div class="seg" id="bgStyle"><button data-v="studio">Studio</button><button data-v="aurora">Aurora</button><button data-v="grid">Grid</button><button data-v="spotlight">Spot</button><button data-v="solid">Vlak</button></div></div>
+      <div class="ctl"><div class="lab">Achtergrond</div><div class="seg" id="bgStyle"><button data-v="studio">Studio</button><button data-v="mesh">Mesh</button><button data-v="aurora">Aurora</button><button data-v="grid">Grid</button><button data-v="spotlight">Spot</button><button data-v="solid">Vlak</button></div></div>
       <div class="ctl"><div class="lab">Kleur <em id="bgv"></em></div><input type="color" id="bg" style="width:100%;height:30px;border:0;background:none;padding:0"></div>
       <div class="ctl"><div class="lab">Overgangen</div><div class="seg" id="transition"><button data-v="glide">Glide</button><button data-v="mix">Mix</button><button data-v="whip">Whip</button><button data-v="zoom">Zoom</button><button data-v="clean">Clean</button></div></div>
       <div class="ctl"><div class="lab">Apparaat</div><div class="seg" id="device"><button data-v="mix">Mix</button><button data-v="more">Meer laptop</button><button data-v="laptop">Alles laptop</button></div></div>
+      <div class="ctl"><div class="lab">Tekst in beeld</div><div class="seg" id="captionStyle"><button data-v="off">Uit</button><button data-v="clean">Clean</button><button data-v="bold">Bold</button></div><div class="muted" style="font-size:11px;margin-top:4px">Kop van de site, features, menu, mobiel en de url op het eind. Per shot aan te passen in het shotpaneel.</div></div>
       <div id="finish"></div>
     </div>
     <div class="tab" data-tab="cam" hidden><div id="sliders"></div></div>
@@ -235,7 +241,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     </div>
     </div>
     <div class="renderbar">
-      <div class="row"><div class="seg" id="quality" style="flex:1"><button data-v="draft">Concept</button><button data-v="final">Final</button></div><button class="btn primary" id="render" style="flex:1.3" disabled>Render MP4</button></div>
+      <div class="row"><div class="seg" id="quality" style="flex:1.4"><button data-v="draft" title="Snel: weinig motion blur">Concept</button><button data-v="final" title="Volle motion blur">Final</button><button data-v="ultra" title="Final + supersampling (1,5x): de strakste randen en tekst, ca. 2x zo lang">Ultra</button></div><button class="btn primary" id="render" style="flex:1" disabled>Render MP4</button></div>
       <div id="renjob"></div>
       <details class="grp"><summary>Renders en extra</summary>
         <div class="renders" id="renders"></div>
@@ -261,6 +267,7 @@ document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('cli
 }));
 const SLIDERS = [
   ['tempo', 'Tempo (lager = sneller)', 0.6, 1.6, 0.05],
+  ['polish', 'Afwerking (gelijke cuts, rust, geen zigzag)', 0, 1, 0.05],
   ['calm', 'Camera-rust (minder links/rechts)', 0, 1, 0.05],
   ['autoframe', 'Auto-kadrering (focus naar het midden)', 0, 1, 0.05],
   ['ramp', 'Speed ramps + slow-mo', 0, 1.5, 0.05],
@@ -272,13 +279,14 @@ const SLIDERS = [
   ['lift', 'Kaarten loskomen', 0, 2, 0.05],
   ['hold', 'Leestijd', 0.2, 2.2, 0.05],
 ];
-const FINISH = [['bgParallax', 'Achtergrond-parallax', 0, 2.5, 0.05], ['motionBlur', 'Motion blur (render)', 0, 1.8, 0.05], ['grain', 'Filmkorrel (render)', 0, 2.5, 0.1]];
+const FINISH = [['shadow', 'Grondschaduw', 0, 1.5, 0.05], ['rim', 'Rim light (lichte rand)', 0, 1.5, 0.05], ['sheen', 'Glans en glas', 0, 1.5, 0.05], ['vignette', 'Vignet (donkere hoeken)', 0, 1, 0.05], ['bgParallax', 'Achtergrond-parallax', 0, 2.5, 0.05], ['grade', 'Kleurcorrectie (render)', 0, 1.5, 0.05], ['motionBlur', 'Motion blur (render)', 0, 1.8, 0.05], ['grain', 'Filmkorrel (render)', 0, 2.5, 0.1]];
 const SHOTS = [['intro', 'Intro: logo + klik'], ['laptop', 'Laptop'], ['orbit', 'Crazy: orbit om de laptop'], ['phone', 'Telefoon (mobiele site)'], ['spin', 'Crazy: telefoon spin + duik'], ['pagespin', 'Pagina draait om zijn as'], ['tracking', 'Tracking close-up langs de kop'], ['rack', 'Rack focus op een feature'], ['crane', 'Crane: van hoog naar ooghoogte'], ['dolly', 'Dolly langs de laptop'], ['float', 'Float: hero zweeft met lagen'], ['phonefan', 'Waaier van drie telefoons'], ['stack', 'Galerij: langs de paginas vliegen'], ['devices', 'Laptop + telefoon'], ['features', 'Key features close-ups'], ['popwall', 'Pop-wall: blokken een voor een los (Apple-stijl)'], ['menu', 'Menu openen'], ['hover', 'Muis volgen over de kaarten'], ['explode', 'Hero-lagen poppen los'], ['cards', 'Kaarten los'], ['travel', 'Vlucht door 3D-ruimte'], ['depth', 'Scroll / parallax'], ['slide', 'Slider'], ['closeup', 'Close-up op een gekozen pagina'], ['outro', 'Outro: logo + CTA']];
 const TOGGLES = [['cursor', 'Cursor en klikjes'], ['watermark', 'Logo in achtergrond'], ['reflection', 'Reflectie onder vlakken']];
 const PRESETS = {
-  clean: { burn: false, leak: false, flashAmt: 0.4, chromaAmt: 0.3, calm: 0.85, ramp: 0.6, tempo: 1.15, energy: 0.6, tilt: 0.7, spin: 0.5, zoom: 0.95, dof: 0.7, lift: 0.8, hold: 1.4, motionBlur: 0.8, grain: 0.4, bgStyle: 'studio', bgParallax: 0.6 },
-  hype: { calm: 0.6, ramp: 1, tempo: 1, energy: 0.85, tilt: 1, spin: 0.85, zoom: 1, dof: 1, lift: 1, hold: 1.15, motionBlur: 1, grain: 0.6, bgStyle: 'aurora', bgParallax: 1 },
-  insane: { burn: true, leak: true, flash: true, flashAmt: 1, chromaAmt: 1, calm: 0.3, ramp: 1.4, tempo: 0.8, energy: 1.6, tilt: 1.4, spin: 1.5, zoom: 1.15, dof: 1.3, lift: 1.6, hold: 0.6, motionBlur: 1.4, grain: 1, bgStyle: 'grid', bgParallax: 1.8 },
+  pro: { burn: false, leak: false, flash: true, flashAmt: 0.45, glow: true, glowAmt: 0.4, chromaAmt: 0.35, lensAmt: 0.35, polish: 1, calm: 0.55, ramp: 0.5, tempo: 1, energy: 0.7, tilt: 0.85, spin: 0.55, zoom: 1, dof: 0.9, lift: 1, hold: 1.25, motionBlur: 1, grain: 0.35, bgStyle: 'studio', bgParallax: 1, shadow: 0.7, rim: 1, sheen: 0.8, vignette: 0.6, grade: 0.6, captions: true, captionStyle: 'clean', transition: 'glide' },
+  clean: { burn: false, leak: false, flashAmt: 0.3, glowAmt: 0.25, chromaAmt: 0.2, lensAmt: 0.25, polish: 1, calm: 0.85, ramp: 0.55, tempo: 1.15, energy: 0.55, tilt: 0.65, spin: 0.4, zoom: 0.95, dof: 0.7, lift: 0.8, hold: 1.45, motionBlur: 0.8, grain: 0.25, bgStyle: 'mesh', bgParallax: 0.6, shadow: 0.8, rim: 1, sheen: 0.7, vignette: 0.5, grade: 0.5, captions: true, captionStyle: 'clean', transition: 'clean' },
+  hype: { polish: 0.7, calm: 0.5, ramp: 1, tempo: 1, energy: 0.95, tilt: 1, spin: 0.85, zoom: 1, dof: 1, lift: 1, hold: 1.1, motionBlur: 1, grain: 0.6, bgStyle: 'aurora', bgParallax: 1, shadow: 0.6, rim: 1, sheen: 1, vignette: 0.7, grade: 0.8, captions: true, captionStyle: 'bold', flash: true, flashAmt: 0.7, glow: true, glowAmt: 0.6, chromaAmt: 0.6, transition: 'glide' },
+  insane: { burn: true, leak: true, flash: true, flashAmt: 1, chromaAmt: 1, lensAmt: 0.6, polish: 0.3, calm: 0.3, ramp: 1.4, tempo: 0.8, energy: 1.6, tilt: 1.4, spin: 1.5, zoom: 1.15, dof: 1.3, lift: 1.6, hold: 0.6, motionBlur: 1.4, grain: 1, bgStyle: 'grid', bgParallax: 1.8, shadow: 0.5, rim: 1.2, sheen: 1.2, vignette: 0.8, grade: 1, captions: true, captionStyle: 'bold', transition: 'whip' },
 };
 fetch('/api/version').then((r) => r.json()).then((v) => { const e = document.getElementById('ver'); if (e) e.textContent = 'v' + v.version; }).catch(() => {});
 let S = { projects: [], cur: null, params: null, tl: null, playerReady: false, t: 0, dur: 0, playing: true };
@@ -318,6 +326,7 @@ FINISH.forEach((s) => slider($('#finish'), s));
 TOGGLES.forEach(([k, l]) => toggle($('#finish'), k, l, () => S.params[k], (v) => (S.params[k] = v)));
 SHOTS.forEach(([k, l]) => toggle($('#shotToggles'), 'shot_' + k, l, () => S.params.shots[k], (v) => { S.params.shots[k] = v; S.params.edit = null; S.params.variation = 0; }));
 $('#format').addEventListener('click', (e) => { const v = e.target.dataset.v; if (v) { S.params.format = v; changed(); } });
+$('#captionStyle').addEventListener('click', (e) => { const v = e.target.dataset.v; if (!v) return; if (v === 'off') S.params.captions = false; else { S.params.captions = true; S.params.captionStyle = v; } changed(); });
 $('#bgStyle').addEventListener('click', (e) => { const v = e.target.dataset.v; if (v) { S.params.bgStyle = v; changed(); } });
 $('#variation').addEventListener('input', (e) => { S.params.variation = +e.target.value; S.params.edit = null; changed(); });
 $('#sound').addEventListener('click', (e) => { const v = e.target.dataset.v; if (v) { S.params.sound = v; changed(); } });
@@ -389,6 +398,7 @@ function syncControls() {
   SHOTS.forEach(([k]) => $('#t_shot_' + k).classList.toggle('on', !!P.shots[k]));
   document.querySelectorAll('#format button').forEach((b) => b.classList.toggle('on', b.dataset.v === P.format));
   document.querySelectorAll('#bgStyle button').forEach((b) => b.classList.toggle('on', b.dataset.v === P.bgStyle));
+  document.querySelectorAll('#captionStyle button').forEach((b) => b.classList.toggle('on', b.dataset.v === (P.captions ? (P.captionStyle || 'clean') : 'off')));
   document.querySelectorAll('#sound button').forEach((b) => b.classList.toggle('on', b.dataset.v === (P.sound || 'full')));
   $('#s_len').value = P.length || 0;
   $('#variation').value = P.variation || 0; $('#varv').textContent = P.variation ? '#' + P.variation : 'standaard';
@@ -563,7 +573,23 @@ function renderInspector(e) {
     else { dot.style.display = box.style.display = 'none'; }
   }
   $('#fb_note').textContent = !sd ? (NOTE[e.shot] || 'Dit shot gebruikt vaste inhoud van de site.') : '';
+  // tekst in beeld voor dit shot: automatisch, eigen tekst, of geen
+  const c = e.caption, off = c === false;
+  $('#fb_capsec').style.display = S.params.captions ? 'block' : 'none';
+  $('#fb_captext').value = c && c.text !== undefined ? c.text : ''; $('#fb_capsub').value = c && c.sub ? c.sub : '';
+  $('#fb_captext').disabled = $('#fb_capsub').disabled = off;
+  $('#fb_capoff').classList.toggle('primary', off); $('#fb_capoff').textContent = off ? 'Weer aan' : 'Geen';
+  $('#fb_caphint').textContent = off ? 'uit voor dit shot' : c && c.text !== undefined ? 'eigen tekst' : 'automatisch';
 }
+let capT = null;
+function setCaption() {
+  const e = curEdit(); if (!e) return;
+  const text = $('#fb_captext').value.trim(), sub = $('#fb_capsub').value.trim();
+  if (!text && !sub) delete e.caption; else e.caption = { text, sub };
+  clearTimeout(capT); capT = setTimeout(() => { changed(); clearTimeout(sendT); pushTimeline(); renderInspector(e); }, 300);
+}
+$('#fb_captext').addEventListener('input', setCaption); $('#fb_capsub').addEventListener('input', setCaption);
+$('#fb_capoff').addEventListener('click', () => { const e = curEdit(); if (!e) return; if (e.caption === false) delete e.caption; else e.caption = false; afterEditChange(); });
 function setSlot(e, val) { const m = mediaOf(e); if (val) m[SLOT] = val; else delete m[SLOT]; }
 function pickSrc(id) {
   const e = curEdit(); if (!e || !SLOT) return;

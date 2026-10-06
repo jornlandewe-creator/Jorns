@@ -1,4 +1,4 @@
-# Website Motion Studio v19.1
+# Website Motion Studio v20
 
 Plak een link, krijg een cinematic showcase-video van de website. Daarna stel je alles bij met sliders en schakelaars en render je opnieuw.
 
@@ -38,6 +38,20 @@ Claude kan dan zelf:
 - renderen, met geluid.
 
 Geen API-key nodig. Capture en render draaien als losse processen, dus ze lopen door als het gesprek even stilstaat. Werkt het niet? Open Terminal in deze map en typ `node mcp.js --selftest`. De log van Claude Desktop staat in `~/Library/Logs/Claude/mcp-server-website-motion-studio.log`.
+
+## Nieuw in v20: strakker, cleaner, premium
+
+De hele look en beweging zijn opnieuw afgewerkt. Standaard staat alles nu op **Pro**: rustig, strak en premium. De oude presets *Clean / Hype / Insane* zijn er nog.
+
+- **Afwerking van de beweging** (slider *Afwerking* bij Camera): elke cut heeft dezelfde snelheid (geen harde en zachte cuts door elkaar), elk shot landt even voordat hij vertrekt, en een draai die heen en weer ging is gladgestreken. Standaard aan.
+- **Tekst in beeld** (Look > Tekst in beeld): strakke titels in Inter, met een kleine kicker in de merkkleur en een zachte waas eronder. Automatisch: de kop van de site (één keer), de feature-teksten, *Navigatie*, *Mobiel* en de url als endcard. In het shotpaneel vul je per shot je eigen tekst in, of zet je hem uit. *Bold* = groter.
+- **Grondschaduw**: laptop, telefoon en pagina's krijgen een zachte schaduw onder zich, zodat ze echt in de ruimte staan.
+- **Rim light en glas**: een dunne lichte rand langs elk vlak en een vaste lichtval over de schermen. Alles onder Look te regelen (schaduw, rim light, glans, vignet).
+- **Mesh-achtergrond**: drie grote zachte kleurvlekken in de merkkleuren die heel langzaam drijven. Subtieler dan Aurora.
+- **Kleurcorrectie** (render): zachte S-curve en een tikje meer verzadiging. Slider *Kleurcorrectie* bij Look.
+- **Ultra-render**: Final plus supersampling (1,5x getekend, teruggeschaald): de strakste randen en tekst, ongeveer twee keer zo lang. `"supersample": 2` in settings.json voor 2x.
+- Effecten staan standaard zachter: film burn en light leaks uit, flitsen, gloed en RGB-split op de helft. Filmkorrel lichter.
+- Regie-idee kent nu ook: *pro / premium / apple*, *zonder tekst*, *grote tekst*, *mesh*, *zonder schaduw*.
 
 ## Werken met de Studio
 

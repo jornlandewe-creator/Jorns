@@ -129,8 +129,10 @@ ${Object.entries(TLMOD.SHOT_INFO).map(([k, v]) => `${k}: ${v}`).join('\n')}
 LOOK EN BEWEGING (standaard tussen haakjes)
 format '9:16'|'4:5'|'1:1' (${D.format}) · tempo 0.6-1.6 (${D.tempo}) · energy 0.2-1.8 (${D.energy}) · tilt 0-1.8 (${D.tilt}) · spin 0-1.8 (${D.spin}) · zoom 0.6-1.5 (${D.zoom})
 dof 0-1.6 (${D.dof}) · lift 0-2 (${D.lift}) · hold 0.2-2.2 leestijd (${D.hold}) · ramp 0-1.5 speed ramps + slow-mo op sleutelmomenten (${D.ramp})
-bgStyle studio|aurora|grid|spotlight|solid (${D.bgStyle}) · bg hex (${D.bg}) · bgParallax 0-2.5 (${D.bgParallax}) · reflection (${D.reflection}) · watermark (${D.watermark}) · cursor (${D.cursor})
-motionBlur 0-1.8 (${D.motionBlur}) · grain 0-2.5 (${D.grain})
+bgStyle studio|mesh|aurora|grid|spotlight|solid (${D.bgStyle}) · bg hex (${D.bg}) · bgParallax 0-2.5 (${D.bgParallax}) · reflection (${D.reflection}) · watermark (${D.watermark}) · cursor (${D.cursor})
+motionBlur 0-1.8 (${D.motionBlur}) · grain 0-2.5 (${D.grain}) · grade 0-1.5 filmische kleurcorrectie, alleen render (${D.grade})
+AFWERKING (v20): polish 0-1 (${D.polish}) gelijke snelheid op elke cut, rust voor de cut, geen zigzag in de draai · shadow 0-1.5 grondschaduw (${D.shadow}) · rim 0-1.5 lichte rand langs vlakken (${D.rim}) · sheen 0-1.5 glans/glas (${D.sheen}) · vignette 0-1 (${D.vignette})
+TEKST IN BEELD (v20): captions true|false (${D.captions}) · captionStyle clean|bold (${D.captionStyle}). Automatisch: kop van de site (één keer), feature-teksten, 'Navigatie', 'Mobiel', url op het eind. Per shot in de edit: caption: { text, sub?, pos?: 'bl'|'bc'|'tc' } of caption: false.
 OVERGANG EN APPARAAT: transition mix|whip|zoom|clean (${D.transition}) · device mix|more (meer laptop, telefoon blijft)|laptop (alles in de laptop) (${D.device})
 GELUID: soundEngine samples|synth (${D.soundEngine}) · soundStyle studio|cinematic|minimal (${D.soundStyle}) · niveaus 0-2: sfxWhoosh, sfxClick, sfxAccent, sfxImpact, music
 EFFECTEN (aan/uit + sterkte 0-1.5): flash/flashAmt, burn/burnAmt (film burn), leak/leakAmt (light leak), glow/glowAmt, bloom/bloomAmt, chroma/chromaAmt (RGB-split bij snelheid). Ze komen op een deel van de overgangen, afgewisseld.
