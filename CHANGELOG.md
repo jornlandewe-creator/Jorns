@@ -32,3 +32,8 @@ MCP en regie-idee
 
 Assets
 - `A.headline` (kop uit de hero-still, anders paginatitel) en `R.host` worden bij bestaande captures automatisch bijgevuld.
+
+Fixes
+- Vlucht en galerij: het scherptevlak (`fz`) reist nu mee met de camera, dus de pagina's zijn scherp terwijl de camera achteruit of opzij vliegt (eerder bleef het scherptevlak op z=0 staan en werd alles wazig).
+- Auto-kadrering houdt rekening met een tekstregel onderin: onderwerp iets hoger, grotere ondermarge, dus nooit een CTA onder de tekst.
+- Caption-teksten: dubbele stukken uit lopende teksten (marquee) weg, losse restjes weg, SCHREEUWTEKST naar zinsopmaak, geen regels van alleen een getal.
