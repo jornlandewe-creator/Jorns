@@ -1,0 +1,191 @@
+//@version=6
+// BTC Portfolio: 7 strategieen in 1 script, met hefboom en trendfilter.
+// Zet dit op een BTCUSD of BTCEUR chart op 4 UUR. Werkt op een gratis TradingView-account.
+// Elke strategie gebruikt 1/7 van het account. Daily-strategieen lezen de afgesloten dagcandle
+// (geen repaint). Verschillen met de Python-bot: Sonic R alleen long, geen maandelijkse
+// herverdeling, en bij het terugkeren boven de SMA200 worden open posities niet opgeschaald.
+strategy("BTC Portfolio 7", overlay = true,
+     initial_capital = 1000, currency = currency.NONE,
+     default_qty_type = strategy.fixed, pyramiding = 7, close_entries_rule = "ANY",
+     commission_type = strategy.commission.percent, commission_value = 0.15,
+     margin_long = 0, margin_short = 0)
+
+LEV     = input.float(3.0, "Hefboom", minval = 1, maxval = 5)
+useFilt = input.bool(true, "Trendfilter (halveer onder SMA200 daily)")
+N = 7.0
+
+// ---------------- daily signalen (vorige afgesloten dag)
+f_daily() =>
+    a     = ta.atr(14)
+    bbm   = ta.sma(close, 50)
+    bbu   = bbm + 2.5 * ta.stdev(close, 50)
+    bbL   = close > bbu and close[1] <= bbu[1]
+    bbX   = close < bbm
+    kcm   = ta.ema(close, 50)
+    kcu   = kcm + 1.5 * ta.atr(50)
+    kcL   = close > kcu and close[1] <= kcu[1]
+    kcX   = close < kcm
+    roc   = close / close[60] - 1
+    momL  = roc > 0 and roc[1] <= 0
+    momX  = roc < 0
+    dh    = ta.ema(high, 34)
+    e89   = ta.ema(close, 89)
+    e200  = ta.ema(close, 200)
+    touch = ta.highest(low <= dh ? 1 : 0, 3) > 0
+    snL   = close > dh and close[1] <= dh[1] and touch and close > e89 and e89 > e200
+    snX   = close < e89
+    red3  = close < open and close[1] < open[1] and close[2] < open[2]
+    rdL   = red3 and close > ta.sma(close, 100)
+    rdX   = close > open
+    tUp   = close > ta.sma(close, 200)
+    [bbL[1], bbX[1], kcL[1], kcX[1], momL[1], momX[1], snL[1], snX[1], rdL[1], rdX[1], tUp[1], a[1]]
+
+[bbL, bbX, kcL, kcX, momL, momX, snL, snX, rdL, rdX, tUp, atrD] = request.security(syminfo.tickerid, "D", f_daily(), lookahead = barmerge.lookahead_on)
+newDay = timeframe.change("D")
+
+// ---------------- 4h signalen
+a4    = ta.atr(14)
+t200  = ta.ema(close, 200)
+[mL, sL, hist] = ta.macd(close, 12, 26, 9)
+[diP, diM, adx] = ta.dmi(14, 14)
+volOk = a4 / ta.ema(a4, 50) > 0.8 and volume > ta.ema(volume, 20)
+trC   = close > t200 and t200 > t200[1] and hist > 0 and adx > 20 and diP > diM and volOk
+trL   = trC and not trC[1]
+trX   = close < t200
+[stLine, stDir] = ta.supertrend(3.0, 10)
+stL   = stDir < 0 and stDir[1] > 0
+stX   = stDir > 0
+
+// ---------------- hulpfuncties
+levEff = useFilt and not tUp ? LEV / 2 : LEV
+
+isOpen(id) =>
+    bool res = false
+    if strategy.opentrades > 0
+        for i = 0 to strategy.opentrades - 1
+            if strategy.opentrades.entry_id(i) == id
+                res := true
+    res
+
+entryPx(id) =>
+    float px = na
+    if strategy.opentrades > 0
+        for i = 0 to strategy.opentrades - 1
+            if strategy.opentrades.entry_id(i) == id
+                px := strategy.opentrades.entry_price(i)
+    px
+
+sizeRisk(dist) =>
+    eq = strategy.equity / N
+    math.min(eq * 0.02 * levEff / (dist / close), eq * levEff) / close
+
+sizeFull() =>
+    strategy.equity / N * levEff / close
+
+// stop / tp1 per strategie
+var float trS = na
+var float bbS = na
+var float kcS = na
+var float moS = na
+var float snS = na
+var float stS = na
+var float moT = na
+var float snT = na
+var float stT = na
+var bool moH = false
+var bool snH = false
+var bool stH = false
+
+// ---------------- trendfilter: bij zakken onder SMA200 alle open posities halveren
+if useFilt and newDay and tUp[1] and not tUp
+    for id in array.from("Trend", "BB", "KC", "MOM", "SONIC", "RED", "ST")
+        if isOpen(id)
+            strategy.close(id, qty_percent = 50, comment = "Filter: halveren")
+
+// ---------------- instappen
+if trL and not isOpen("Trend")
+    strategy.entry("Trend", strategy.long, qty = sizeRisk(2 * a4))
+    trS := close - 2 * a4
+if stL and not isOpen("ST")
+    strategy.entry("ST", strategy.long, qty = sizeRisk(3 * a4))
+    stS := close - 3 * a4
+    stT := close + 3 * a4
+    stH := false
+if newDay
+    if bbL and not isOpen("BB")
+        strategy.entry("BB", strategy.long, qty = sizeFull())
+        bbS := close - 3 * atrD
+    if kcL and not isOpen("KC")
+        strategy.entry("KC", strategy.long, qty = sizeFull())
+        kcS := close - 1.5 * atrD
+    if momL and not isOpen("MOM")
+        strategy.entry("MOM", strategy.long, qty = sizeRisk(1.5 * atrD))
+        moS := close - 1.5 * atrD
+        moT := close + 1.0 * atrD
+        moH := false
+    if snL and not isOpen("SONIC")
+        strategy.entry("SONIC", strategy.long, qty = sizeRisk(1.5 * atrD))
+        snS := close - 1.5 * atrD
+        snT := close + 1.5 * atrD
+        snH := false
+    if rdL and not isOpen("RED")
+        strategy.entry("RED", strategy.long, qty = sizeFull())
+
+// ---------------- exits: signaal
+if trX and isOpen("Trend")
+    strategy.close("Trend", comment = "Trend exit")
+if stX and isOpen("ST")
+    strategy.close("ST", comment = "ST exit")
+if newDay
+    if bbX and isOpen("BB")
+        strategy.close("BB", comment = "BB exit")
+    if kcX and isOpen("KC")
+        strategy.close("KC", comment = "KC exit")
+    if momX and isOpen("MOM")
+        strategy.close("MOM", comment = "MOM exit")
+    if snX and isOpen("SONIC")
+        strategy.close("SONIC", comment = "Sonic exit")
+    if rdX and isOpen("RED")
+        strategy.close("RED", comment = "RED exit")
+
+// ---------------- exits: stop loss en deelwinst (1/3) met break-even stop
+if isOpen("Trend")
+    strategy.exit("Trend SL", "Trend", stop = trS)
+if isOpen("BB")
+    strategy.exit("BB SL", "BB", stop = bbS)
+if isOpen("KC")
+    strategy.exit("KC SL", "KC", stop = kcS)
+
+tp1(id, s, t, hit) =>
+    bool h = hit
+    float st = s
+    if not h and high >= t
+        h := true
+        st := math.max(s, nz(entryPx(id), s) * 1.0025)   // stop naar break-even
+    [h, st]
+
+if isOpen("MOM")
+    [h, s] = tp1("MOM", moS, moT, moH)
+    moH := h
+    moS := s
+    if not moH
+        strategy.exit("MOM TP", "MOM", qty_percent = 33, limit = moT, stop = moS)
+    strategy.exit("MOM SL", "MOM", stop = moS)
+if isOpen("SONIC")
+    [h, s] = tp1("SONIC", snS, snT, snH)
+    snH := h
+    snS := s
+    if not snH
+        strategy.exit("SONIC TP", "SONIC", qty_percent = 33, limit = snT, stop = snS)
+    strategy.exit("SONIC SL", "SONIC", stop = snS)
+if isOpen("ST")
+    [h, s] = tp1("ST", stS, stT, stH)
+    stH := h
+    stS := s
+    if not stH
+        strategy.exit("ST TP", "ST", qty_percent = 33, limit = stT, stop = stS)
+    strategy.exit("ST SL", "ST", stop = stS)
+
+// ---------------- tekenen
+plot(t200, "EMA200 (4h)", color = color.new(color.teal, 30))
+bgcolor(useFilt and not tUp ? color.new(color.red, 92) : na, title = "Onder SMA200 daily: halve hefboom")

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+dashboard/config.json
+dashboard/state.json*
+dashboard/heartbeat.json*
+dashboard/news.json
+dashboard/results_agent.json
+dashboard/NOODSTOP
+*.log

@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crypto Portfolio Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: kopbalk met start/stop -> kerncijfers -> equity curve -> strategieen + logboek -> week/maand -> trades; instellingen in een zijpaneel */
+:root{
+  --bg:#f2f4f3; --panel:#ffffff; --fg:#14201c; --muted:#5c6b66; --line:#d9e0dd; --soft:#eaefed;
+  --accent:#1d6f5f; --accent-fg:#ffffff; --price:#b9c4c0; --good:#1f8a4c; --bad:#b4372f; --warn:#9a6a00;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e1412; --panel:#151d1a; --fg:#e3ebe8; --muted:#8fa09a; --line:#26302c; --soft:#1b2521;
+  --accent:#3fb39b; --accent-fg:#06110e; --price:#3a4743; --good:#4fc283; --bad:#ec6f63; --warn:#e0a53a; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans)}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding:20px;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px}
+h1{font-size:22px;margin:0;font-weight:700;letter-spacing:-.01em}
+.pill{font:500 12px var(--mono);padding:4px 10px;border-radius:99px;background:var(--soft);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.pill.on{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.pill.live{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{color:var(--bad)}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.kpi{background:var(--panel);padding:14px 16px;display:grid;gap:2px}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi b{font:500 22px var(--mono);font-variant-numeric:tabular-nums}
+.kpi em{font:400 12px var(--mono);color:var(--muted);font-style:normal}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.card h2{font-size:15px;margin:0 0 10px;font-weight:600}
+.row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px}
+@media(max-width:900px){.row{grid-template-columns:1fr}}
+canvas{width:100%;display:block}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+td{font-family:var(--mono)} td.name{font-family:var(--sans);font-weight:500;text-align:left}
+.tbl{overflow-x:auto}
+.pos{color:var(--good)} .neg{color:var(--bad)} .mut{color:var(--muted)}
+.chip{font:500 11px var(--mono);padding:2px 7px;border-radius:4px;background:var(--soft)}
+.chip.long{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.chip.short{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.log{font:12px/1.6 var(--mono);max-height:330px;overflow:auto;display:grid;gap:2px}
+.log div{display:grid;grid-template-columns:110px 1fr;gap:8px}
+.log time{color:var(--muted)}
+.bars{display:flex;align-items:center;gap:3px;height:110px;border-bottom:1px solid var(--line);position:relative}
+.bars i{flex:1;min-width:3px;position:relative;height:100%}
+.bars i b{position:absolute;left:0;right:0;border-radius:2px}
+.sub{font-size:13px;color:var(--muted)}
+.banner{padding:10px 14px;border-radius:6px;background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad);font-size:14px}
+.banner.info{background:var(--soft);color:var(--muted)}
+/* zijpaneel */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);padding:22px;overflow:auto;transform:translateX(100%);transition:transform .2s;z-index:10;display:grid;gap:14px;align-content:start}
+.drawer.open{transform:none}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+.field{display:grid;gap:5px}
+.field label{font-size:13px;font-weight:600}
+.field small{color:var(--muted);font-size:12px}
+.field input[type=text],.field input[type=password],.field input[type=number],.field input[type=date],.field select{padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;padding:8px;cursor:pointer}
+.seg button.sel{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.mods{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.mod{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:grid;gap:2px}
+.mod b{font:500 18px var(--mono)}
+.mod span{font-size:12px;color:var(--muted)}
+.btrow{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.btctl{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.btctl label{display:grid;gap:3px}
+.btctl input,.btctl select{padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.bar{height:6px;background:var(--soft);border-radius:3px;overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+#bt-res{display:grid;gap:14px;margin-top:14px}
+#bt-res .tbl{max-width:520px}
+.btgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.btbox{border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:grid;gap:2px}
+.btbox span{font-size:12px;color:var(--muted)} .btbox b{font:500 24px var(--mono)} .btbox em{font:400 12px var(--mono);color:var(--muted);font-style:normal}
+.profs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.prof{border:1px solid var(--line);border-radius:6px;padding:9px 10px;background:var(--bg);cursor:pointer;text-align:left;display:grid;gap:2px}
+.prof b{font-size:14px} .prof span{font:12px var(--mono);color:var(--muted)}
+.prof.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.prof.hot b{color:var(--bad)}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.hc{border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:grid;gap:2px;font-size:13px}
+.hc b{font-size:13px;display:flex;align-items:center;gap:6px} .hc span{color:var(--muted);font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--muted)}
+.dot.ok{background:var(--good)} .dot.let_op{background:var(--warn)} .dot.probleem{background:var(--bad)}
+.rembar{position:relative;height:10px;background:var(--soft);border-radius:5px;margin:6px 0 2px}
+.rembar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--warn)}
+.rembar s{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--bad)}
+.paused{font:500 11px var(--mono);color:var(--bad)}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Crypto Portfolio Bot</h1><span class="pill" id="versie" title="Versie van de bot"></span>
+    <span class="pill" id="st-status">gestopt</span>
+    <span class="pill" id="st-mode">paper</span>
+    <span class="sub" id="st-bron"></span>
+    <div class="spacer"></div>
+    <button class="btn" id="b-bt">Backtest</button>
+    <button class="btn" id="b-rap">Rapport voor Claude</button>
+    <button class="btn" id="b-settings">Instellingen</button>
+    <button class="btn primary" id="b-start">Start</button>
+    <button class="btn danger" id="b-stop" hidden>Stop</button>
+  </header>
+
+  <div class="banner" id="err" hidden></div>
+  <section class="card" id="bt-panel" hidden>
+    <div class="btrow">
+      <div><h2>Backtest</h2><p class="sub">De bot rekent een periode door alsof hij toen live draaide. Elke beslissing gebruikt alleen koersen van vóór dat moment.</p></div>
+      <div class="btctl">
+        <label class="sub">Van<input type="date" id="bt-from" min="2024-03-01" max="2026-09-30"></label>
+        <label class="sub">Tot<input type="date" id="bt-to" min="2024-03-02" max="2026-10-01"></label>
+        <label class="sub">Profiel<select id="bt-prof"><option value="rustig">Rustig 1×</option><option value="standaard" selected>Standaard 2×</option><option value="agressief">Agressief 4×</option><option value="zeer_agressief">Zeer agressief 6×</option></select></label>
+        <button class="btn" id="bt-2m">Laatste 2 maanden</button>
+        <button class="btn primary" id="bt-run">Backtest draaien</button>
+      </div>
+    </div>
+    <div class="bar" id="bt-bar" hidden><i id="bt-prog"></i></div>
+    <div id="bt-res" hidden>
+      <div class="btgrid">
+        <div class="btbox"><span>Bot</span><b id="r-bot">–</b><em id="r-per"></em></div>
+        <div class="btbox"><span>BTC vasthouden</span><b id="r-btc">–</b><em id="r-alt"></em></div>
+        <div class="btbox"><span>Verschil</span><b id="r-diff">–</b><em id="r-dd"></em></div>
+      </div>
+      <div class="tbl"><table>
+        <thead><tr><th>Module</th><th>Rendement</th><th>Eindwaarde</th></tr></thead>
+        <tbody id="r-mods"></tbody>
+      </table></div>
+      <div class="tbl"><table>
+        <thead><tr><th>Week</th><th>Rendement</th></tr></thead>
+        <tbody id="r-weeks"></tbody>
+      </table></div>
+    </div>
+  </section>
+  <div class="banner info" id="intro">Druk op Start om de bot in paper-modus te laten draaien op live koersen. Er wordt niets echt gekocht. Standaardprofiel is <b>Agent</b>: BTC, ETH en SOL, alleen long als BTC en de munt boven hun 200-daags gemiddelde staan, inzet volgens een trend-ensemble (20/50/100 dagen) en kleiner bij onrust (volatiliteitsdoel). Getest 2018 - sep 2026: 54% per jaar, grootste daling −27%. De oudere profielen (vier modules, Trend-vasthouden) blijven beschikbaar. Wil je eerst zien hoe het werkt, kies dan bij Instellingen "Demo".</div>
+
+  <section class="kpis">
+    <div class="kpi"><span>Waarde account</span><b id="k-eq">–</b><em id="k-start"></em></div>
+    <div class="kpi"><span>Rendement</span><b id="k-ret">–</b><em id="k-days"></em></div>
+    <div class="kpi"><span>Gemiddeld per week</span><b id="k-wk">–</b><em id="x-wk"></em></div>
+    <div class="kpi"><span>Gemiddeld per maand</span><b id="k-mo">–</b><em id="x-mo"></em></div>
+    <div class="kpi"><span>Grootste daling</span><b id="k-dd">–</b><em id="x-dd"></em></div>
+    <div class="kpi"><span>Gewonnen trades</span><b id="k-wr">–</b><em id="k-tr"></em></div>
+    <div class="kpi"><span>Hefboom nu</span><b id="k-lev">–</b><em id="k-reg"></em></div>
+  </section>
+
+  <section class="card" id="n-card" hidden>
+    <div style="display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline"><h2 style="margin:0">Nieuws (Claude)</h2><span class="sub" id="n-sum"></span></div>
+    <div class="row" style="margin-top:10px">
+      <div><div id="n-last" style="font-size:14px"></div><div class="sub" id="n-blk" style="margin-top:6px"></div></div>
+      <div><b style="font-size:14px">Laatste relevante koppen</b><div class="sub" id="n-heads" style="margin-top:4px"></div></div>
+    </div>
+  </section>
+
+  <section class="card" id="h-card" hidden>
+    <div style="display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline"><h2 style="margin:0">Gezondheid</h2><span class="sub" id="h-sum"></span></div>
+    <div class="row" style="margin-top:10px">
+      <div>
+        <div class="hgrid" id="h-grid"></div>
+      </div>
+      <div>
+        <b style="font-size:14px">Noodrem</b> <span class="sub" id="rem-stand"></span>
+        <div class="rembar"><i id="rem-fill"></i><s id="rem-stop"></s></div>
+        <div class="sub" id="rem-txt"></div>
+        <button class="btn" id="b-hervat" hidden style="margin-top:8px">Nu hervatten</button>
+        <div class="log" id="h-alerts" style="max-height:150px;margin-top:10px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Accountwaarde <span class="sub" id="c-sub"></span></h2>
+    <canvas id="curve" height="260"></canvas>
+  </section>
+
+  <div class="row">
+    <section class="card">
+      <h2>Modules</h2>
+      <div class="mods" id="mods"><span class="sub">Nog niet gestart</span></div>
+      <h2 style="margin-top:16px">Open posities</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Module</th><th style="text-align:left">Munt</th><th style="text-align:left">Positie</th><th>Instap</th><th>Stop</th><th>Open winst</th></tr></thead>
+        <tbody id="t-pos"><tr><td colspan="6" class="mut">Geen open posities</td></tr></tbody>
+      </table></div>
+    </section>
+    <section class="card">
+      <h2>Logboek</h2>
+      <div class="log" id="log"></div>
+    </section>
+  </div>
+
+  <div class="row">
+    <section class="card">
+      <h2>Per week <span class="sub" id="w-sub"></span></h2>
+      <div class="bars" id="wk"></div>
+      <h2 style="margin-top:16px">Per maand <span class="sub" id="m-sub"></span></h2>
+      <div class="bars" id="mo"></div>
+    </section>
+    <section class="card">
+      <h2>Wat je kunt verwachten per profiel (getest)</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Profiel</th><th>Winrate</th><th>Per jaar</th><th>Daling</th><th>Stijg-mnd</th><th>Daal-mnd</th><th>Winst na 12 mnd</th></tr></thead>
+        <tbody>
+          <tr><td>Rustig 1×</td><td>43%</td><td>21%</td><td>−11%</td><td>+4,0%</td><td>−0,2%</td><td>98%</td></tr>
+          <tr><td>Standaard 2×</td><td>44%</td><td>36%</td><td>−23%</td><td>+7,6%</td><td>−0,4%</td><td>94%</td></tr>
+          <tr><td>Agressief 4×</td><td>44%</td><td>72%</td><td>−38%</td><td>+16,6%</td><td>−1,4%</td><td>94%</td></tr>
+          <tr><td>Zeer agressief 6×</td><td>44%</td><td>110%</td><td>−54%</td><td>+28,6%</td><td>−2,5%</td><td>91%</td></tr>
+          <tr><td>Hoge winrate 4×</td><td>71%</td><td>35%</td><td>−34%</td><td>+11,7%</td><td>−3,1%</td><td>53%</td></tr>
+          <tr><td>Winrate mix 2×</td><td>63%</td><td>40%</td><td>−38%</td><td>+7,6%</td><td>+1,2%</td><td>99%</td></tr>
+          <tr><td>Winrate mix 3×</td><td>62%</td><td>50%</td><td>−48%</td><td>+14,1%</td><td>+1,5%</td><td>89%</td></tr>
+          <tr><td>Trend-vasthouden 1×</td><td>21%</td><td>9%</td><td>−31%</td><td>+7,9%</td><td>−5,6%</td><td>49%</td></tr>
+          <tr><td>Trend snel (proef) 1×</td><td>28%</td><td>30%</td><td>−30%</td><td>+10,3%</td><td>−2,7%</td><td>88%</td></tr>
+          <tr><td>BTC vasthouden</td><td></td><td>12%</td><td>−53%</td><td>+12,9%</td><td>−13,1%</td><td></td></tr>
+        </tbody>
+      </table></div>
+      <p class="sub">Echte bot-replays maart 2024 – sep 2026 met alle vier modules en futures-kosten. Stijgende maand: maanden waarin BTC meer dan 5% steeg (14 keer), dalende maand: meer dan 5% daalde (9 keer). "Winst na 12 mnd": van alle mogelijke startdagen het deel dat een jaar later op winst stond. Na één maand is dat ongeveer de helft: op korte termijn is het een muntworp.<br>Trend-vasthouden is als enige eerst vastgelegd en daarna getest, over 2018 – sep 2026: 33% per jaar, daling −62% (BTC+ETH gewoon vasthouden: 20% per jaar, daling −88%). Sinds 2022: 25% per jaar, daling −29% (vasthouden: 3%, −69%). Veel kleine verliezen, weinig maar grote winsten. Trend snel (proef): 2018 – sep 2026 58% per jaar, daling −49%; gevonden na het bekijken van 2024-2026, dus eerst op papier volgen.<br><b>Agent</b> (v13): dagdata 2018 – sep 2026 met dezelfde code als live: 54% per jaar, daling −27%, 2022 vlak (0%), 2018 −3%. Gekozen op 2018-2022, gecontroleerd op 2023-2026 (43% per jaar, daling −27%). Agent spot (geen hefboom): 48% per jaar, daling −24%. Zie LEESMIJ.md.</p>
+    </section>
+  </div>
+
+  <section class="card" id="rap-card" hidden>
+    <h2>Rapport voor Claude</h2>
+    <p class="sub">Gekopieerd naar je klembord. Plak het in je chat met Claude, dan kan die meekijken wat er gebeurt. Er staan geen API keys of tokens in.</p>
+    <textarea id="rap-txt" readonly style="width:100%;height:220px;font:12px ui-monospace,monospace;margin-top:8px"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" id="rap-copy">Opnieuw kopiëren</button><button class="btn" id="rap-close">Sluiten</button></div>
+  </section>
+
+  <section class="card">
+    <h2>Handelsregels en kwaliteit per strategie</h2>
+    <p class="sub">Klik op een strategie voor de exacte regels: wanneer hij instapt, waar de stop ligt, hoe groot de positie is en wanneer hij eruit gaat. De cijfers gaan over de trades van deze sessie.</p>
+    <div class="tbl"><table><thead><tr><th>Strategie</th><th>Trades</th><th>Winrate</th><th>Gem. winst</th><th>Gem. verlies</th><th>Profit factor</th><th>Totaal</th></tr></thead><tbody id="q-body"></tbody></table></div>
+    <div id="rules" style="margin-top:12px"></div>
+    <ul class="sub" id="rules-alg" style="margin-top:10px;padding-left:18px"></ul>
+  </section>
+
+  <section class="card">
+    <h2>Trades <span class="sub" id="tr-sub"></span> <button class="btn" id="b-more" style="padding:3px 10px;font-size:12px;margin-left:8px" hidden>Toon alles</button></h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Moment</th><th style="text-align:left">Strategie</th><th style="text-align:left">Munt</th><th>Richting</th><th>Instap</th><th>Uit</th><th>Resultaat</th><th>Reden</th></tr></thead>
+      <tbody id="t-tr"><tr><td colspan="8" class="mut">Nog geen trades</td></tr></tbody>
+    </table></div>
+  </section>
+</div>
+
+<aside class="drawer" id="drawer" aria-label="Instellingen">
+  <div style="display:flex;align-items:center"><h2 style="margin:0;font-size:18px">Instellingen</h2><div class="spacer"></div><button class="btn" id="d-close">Sluiten</button></div>
+  <div class="field"><label>Profiel</label>
+    <div class="profs" id="s-prof"></div>
+    <small id="prof-note"></small></div>
+  <div class="field" id="f-eigen"><label for="i-lev">Hefboom: <span id="v-lev"></span>×</label><input type="range" id="i-lev" min="1" max="6" step="0.5">
+    <label class="check"><input type="checkbox" id="i-rem"> Noodrem: halve hefboom als de strategie 6% onder haar top zakt</label>
+    <label class="check"><input type="checkbox" id="i-sysf"> Trendfilter op alles: halve hefboom als BTC onder zijn 200-daags gemiddelde staat</label>
+    <label class="sub">Noodstop (% onder de top, 0 = uit)<input type="number" id="i-stop" min="0" max="90"></label>
+    <small>Shorts en hefboom vragen een futures-account.</small></div>
+  <div class="field"><label>Koersen</label>
+    <div class="seg" id="s-bron"><button data-v="live">Live koersen</button><button data-v="replay">Demo (historie)</button></div>
+    <small>Live haalt publieke koersen van de exchange op, zonder API key.</small></div>
+  <div class="field" id="f-replay"><label for="i-rstart">Demo vanaf</label><input type="date" id="i-rstart" min="2020-10-01" max="2026-08-01">
+    <label for="i-rspeed">Snelheid (candles per seconde)</label><input type="number" id="i-rspeed" min="1" max="200"></div>
+  <div class="field"><label for="i-dex">Koersbron (paper)</label><select id="i-dex"></select><small>Binance levert ook het aantal trades per candle, nodig voor de volume-module.</small></div>
+  <div class="field"><label>Verdeling over modules (%)</label>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+      <label class="sub">BTC-portfolio<input type="number" id="i-wb" min="0" max="100"></label>
+      <label class="sub">L/S-rotatie<input type="number" id="i-wl" min="0" max="100"></label>
+      <label class="sub">Volume-piek<input type="number" id="i-wv" min="0" max="100"></label>
+      <label class="sub">Trend-long<input type="number" id="i-wt" min="0" max="100"></label>
+    </div><small>Zet een module op 0 om hem uit te zetten. Met risicopariteit aan geldt dit alleen de eerste maand.</small></div>
+  <label class="check"><input type="checkbox" id="i-rp"> Risicopariteit: modules krijgen elke maand geld naar rato van hun beweeglijkheid (aanbevolen, halveert de daling)</label>
+  <label class="check"><input type="checkbox" id="i-filt"> Trendfilter: halve hefboom als BTC onder zijn 200-daags gemiddelde staat</label>
+  <div class="field"><label for="i-cap">Startkapitaal (paper)</label><input type="number" id="i-cap" min="10"></div>
+  <div class="field"><label>Kosten per trade (paper)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <label class="sub">Fee %<input type="number" id="i-fee" step="0.01" min="0" max="1"></label>
+      <label class="sub">Slippage %<input type="number" id="i-slip" step="0.01" min="0" max="1"></label>
+    </div><small>Futures: rond 0,05% fee. Spot bij Bitvavo: tot 0,25%. Hogere kosten = lager rendement.</small></div>
+  <hr>
+  <div class="field"><label>Meldingen op je telefoon (Telegram)</label>
+    <input type="password" id="i-tg" autocomplete="off" placeholder="Telegram bot-token">
+    <small>In Telegram: zoek @BotFather, stuur /newbot, kopieer het token hierheen. Stuur daarna een berichtje naar je nieuwe bot en klik Test.</small>
+    <label class="check"><input type="checkbox" id="i-tgtr"> Ook een melding bij elke trade (anders alleen noodrem, pauzes, fouten en een dagrapport)</label>
+    <label class="sub">Dagrapport om (uur)<input type="number" id="i-tguur" min="0" max="23"></label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="d-tgtest">Test melding</button><button class="btn" id="d-tgwis">Token wissen</button></div></div>
+  <div class="field"><label>Nieuws met Claude (optioneel)</label>
+    <select id="i-news"><option value="uit">uit</option><option value="melden">alleen melden</option><option value="beschermen">melden en beschermen</option></select>
+    <input type="password" id="i-ck" autocomplete="off" placeholder="Claude API key (console.anthropic.com)" style="margin-top:6px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <label class="sub">Max vragen per dag<input type="number" id="i-nmax" min="1" max="48"></label>
+      <label class="sub">Budget per maand (€)<input type="number" id="i-nbud" min="0" max="50" step="0.5"></label>
+    </div>
+    <small>De bot leest gratis nieuwsfeeds en vraagt Claude (goedkoopste model) alleen om nieuwe koppen te beoordelen: zo'n €0,001 per vraag, meestal minder dan €0,50 per maand. Boven het budget stopt hij vanzelf. "Beschermen": bij zeer negatief nieuws over een munt gaan de longs dicht en komen er 3 dagen geen nieuwe; bij zeer positief nieuws gaan de shorts dicht. Niet terug te testen: nieuws van vroeger is niet beschikbaar. Een Claude API key is iets anders dan je Claude-abonnement; je betaalt per gebruik.</small>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="d-cktest">Test Claude</button><button class="btn" id="d-ckwis">Key wissen</button></div></div>
+  <div class="field"><label>Zelfherstel</label>
+    <label class="check"><input type="checkbox" id="i-auto"> Automatisch hervatten na een herstart van de computer of het programma</label>
+    <label class="sub">Als posities niet kloppen met de exchange (live)<select id="i-rec"><option value="melden">alleen melden</option><option value="corrigeren">zelf corrigeren</option></select></label></div>
+  <hr>
+  <div class="field"><label>Modus</label>
+    <div class="seg" id="s-mode"><button data-v="paper">Paper</button><button data-v="live">Live (echt geld)</button></div></div>
+  <div class="field"><label for="i-afr">Winst afromen</label><select id="i-afr"><option value="0">uit</option><option value="25">25% van nieuwe winst</option><option value="50">50% van nieuwe winst</option><option value="75">75% van nieuwe winst</option></select>
+    <small>Elke maand gaat dit deel van de winst boven de vorige top naar een kluis. De bot handelt daar niet meer mee, dus die winst kan niet meer verloren gaan. Je kunt het van de exchange halen. Getest: kost ongeveer 10% van het eindbedrag bij 50%.</small></div>
+  <div class="field"><label for="i-markt">Soort account</label><select id="i-markt"><option value="futures">Futures (shorts en hefboom, zoals getest)</option><option value="spot">Spot (alleen kopen, geen hefboom, bijvoorbeeld Bitvavo)</option></select>
+    <small>Spot werkt bij elke gewone broker, maar zonder shorts en hefboom. Getest: 20% per jaar bij 0,05% kosten, 17% bij 0,10%, maar maar 7,5% bij 0,25% (Bitvavo). De bot handelt vaak, dus lage kosten zijn belangrijk. Geldt ook voor de backtest.</small></div>
+  <div class="field"><label for="i-ex">Exchange voor live</label><select id="i-ex"></select></div>
+  <div class="field"><label for="i-sym">Markt-notatie</label><input type="text" id="i-sym"><small>{c} wordt de munt. OKX (ook Europa, "myokx"): {c}/USDT:USDT. Kraken futures: {c}/USD:USD. Spot bij Bitvavo of Kraken: {c}/EUR. Bestaat de notatie niet, dan zoekt de bot zelf het juiste contract (bijvoorbeeld OKX X-Perps).</small></div>
+  <div class="field"><label for="i-key">API key</label><input type="password" id="i-key" autocomplete="off" placeholder="niet ingesteld"></div>
+  <div class="field"><label for="i-pass">API passphrase (OKX)</label><input type="password" id="i-pass" autocomplete="off" placeholder="niet ingesteld"><small>OKX vraagt bij het maken van een API key een eigen wachtwoord (passphrase). Andere exchanges: leeg laten.</small></div>
+  <div class="field"><label for="i-sec">API secret</label><input type="password" id="i-sec" autocomplete="off" placeholder="niet ingesteld">
+    <small>Wordt alleen op deze computer bewaard (config.json). Geef de key alleen handelsrechten, nooit opnemen.</small></div>
+  <label class="check"><input type="checkbox" id="i-risk"> Ik begrijp dat live handelen met hefboom tot grote verliezen kan leiden</label>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn primary" id="d-save">Opslaan</button>
+    <button class="btn" id="d-test">Test API key</button>
+    <button class="btn" id="d-wis">Keys wissen</button>
+    <button class="btn danger" id="d-reset">Paper-account resetten</button>
+  </div>
+  <div class="sub" id="d-msg" role="status"></div>
+</aside>
+
+<script>
+const $=id=>document.getElementById(id);
+const pct=(v,d=2)=>v==null?'–':(v>=0?'+':'')+(v*100).toFixed(d).replace('.',',')+'%';
+const eur=v=>v==null?'–':v.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+const prc=v=>v==null?'–':(v>=100?v.toLocaleString('nl-NL',{maximumFractionDigits:0}):v.toLocaleString('nl-NL',{maximumSignificantDigits:4}));
+const num=v=>v==null?'–':v.toLocaleString('nl-NL',{maximumFractionDigits:0});
+const cls=v=>v>0?'pos':(v<0?'neg':'');
+let S=null, cfg=null, dirty=false, allTrades=false, PROF='standaard';
+function renderProfs(c){
+  PROF=c.profiel; const P=c.profielen||{};
+  const items=Object.entries(P).sort((a,b)=>a[1].lev-b[1].lev).map(([k,p])=>`<button type="button" class="prof ${k===PROF?'sel':''} ${k==='zeer_agressief'?'hot':''}" data-p="${k}"><b>${p.naam} · ${p.lev}×</b><span>${p.verwacht.jaar} per jaar · winrate ${p.verwacht.winrate||'–'}</span><span>daling ${p.verwacht.daling}</span></button>`);
+  items.push(`<button type="button" class="prof ${PROF==='eigen'?'sel':''}" data-p="eigen"><b>Eigen</b><span>zelf instellen</span></button>`);
+  $('s-prof').innerHTML=items.join(''); profNote();
+}
+function profNote(){
+  const p=(cfg&&cfg.profielen||{})[PROF];
+  $('f-eigen').hidden=PROF!=='eigen';
+  $('prof-note').textContent=!p?'Hefboom, noodrem en noodstop stel je hieronder zelf in.':
+    `${p.lev}× hefboom, noodrem ${p.rem?'aan':'uit'}, trendfilter ${p.filter?'aan':'uit'}, ${p.noodstop?`noodstop bij ${p.noodstop.toFixed(0)}% onder de top`:'geen noodstop (de wekelijkse trendcontrole is de bescherming)'}. Getest: ${p.verwacht.jaar} per jaar, ${p.verwacht.dag} per dag gemiddeld, daling ${p.verwacht.daling}.`+(PROF==='zeer_agressief'?' Groot risico: in de test kon het account tijdelijk meer dan de helft kwijt zijn.':'');
+}
+document.addEventListener('click',e=>{const b=e.target.closest('.prof'); if(!b) return; PROF=b.dataset.p; dirty=true; [...$('s-prof').children].forEach(x=>x.classList.toggle('sel',x.dataset.p===PROF)); profNote();});
+function renderHealth(s){
+  renderNews(s);
+  const h=s.health; if(!h) return;
+  const show=!!(s.stats||s.status!=='gestopt'); $('h-card').hidden=!show; if(!show) return;
+  const lab={ok:'alles in orde',let_op:'let op',probleem:'probleem'};
+  $('h-sum').innerHTML=`<span class="dot ${h.overall}"></span> ${lab[h.overall]||h.overall} · laatste ronde ${h.laatste_stap||'–'} · herstarts ${h.restarts}`+(s.telegram&&s.telegram.aan?` · Telegram ${s.telegram.ok===false?'<span class="neg">fout</span>':'aan'}`:' · Telegram uit');
+  $('h-grid').innerHTML=h.checks.filter(c=>c.level!=='uit').map(c=>`<div class="hc"><b><span class="dot ${c.level}"></span>${c.naam}</b><span>${c.msg}</span></div>`).join('');
+  $('h-alerts').innerHTML=h.alerts.map(a=>`<div><time>${a.t}</time><span><span class="dot ${a.level}"></span> ${a.wat}: ${a.msg}</span></div>`).join('')||'<span class="sub">Nog geen meldingen</span>';
+  const r=s.rem;
+  if(r){
+    const names={normaal:'volle hefboom',half:'halve hefboom',pauze:'PAUZE',herstart:'halve hefboom na pauze'};
+    $('rem-stand').textContent=`· ${names[r.stand]} (${(s.hefboom_nu||0).toFixed(1).replace('.',',')}× van ${s.hefboom_basis}×)`;
+    const stop=r.noodstop||0.6, dd=Math.min(-r.daling,1);
+    $('rem-fill').style.width=(Math.min(dd/stop,1)*100)+'%'; $('rem-stop').style.left='calc(100% - 2px)';
+    $('rem-txt').textContent=`Account ${pct(r.daling,1)} onder de top`+(r.noodstop?`, noodstop bij −${(r.noodstop*100).toFixed(0)}%`:'')+(r.rem_aan?` · strategie ${pct(r.strategie_daling,1)} (rem bij −6%)`:' · rem uit in dit profiel')+(r.filter_aan?(r.trend_up?' · trendfilter: BTC boven gemiddelde':' · trendfilter: halve hefboom'):'')+(r.pauze_tot?` · pauze tot ${r.pauze_tot.slice(0,16).replace('T',' ')}`:'');
+    $('b-hervat').hidden=r.stand!=='pauze';
+  }
+}
+const EXP={1:['+0,39%','+1,8%','−16%'],2:['+0,70%','+3,5%','−32%'],3:['+0,97%','+5,4%','−44%']};
+
+async function api(path,body){
+  const r=await fetch(path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+  return r.json();
+}
+function seg(id,val){[...$(id).children].forEach(b=>b.classList.toggle('sel',b.dataset.v===val))}
+const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function renderNews(s){const n=s.nieuws; if(!n){return}
+  $('n-card').hidden=n.stand==='uit';
+  if(n.stand==='uit')return;
+  const st={melden:'alleen melden',beschermen:'melden en beschermen'}[n.stand]||n.stand;
+  $('n-sum').innerHTML=`${st} · ${n.key?'key ingesteld':'<span class="neg">geen Claude key</span>'} · deze maand €${(n.kosten_maand||0).toFixed(3)} van €${n.budget} · vragen vandaag ${n.vragen_vandaag}/${n.max_dag}`+(n.fout?` · <span class="neg">${esc(n.fout)}</span>`:'');
+  const l=n.laatste; const sc=v=>`<b class="${v>0?'pos':v<0?'neg':''}">${v>0?'+':''}${v}</b>`;
+  $('n-last').innerHTML=l?`Laatste beoordeling ${new Date(l.t).toLocaleString('nl-NL',{dateStyle:'short',timeStyle:'short'})}: markt ${sc(l.markt)}${Object.entries(l.munten||{}).map(([c,v])=>` · ${c} ${sc(v)}`).join('')}<div class="sub">${esc(l.reden||'')}</div>`:'Nog geen beoordeling. Claude wordt pas gevraagd als er nieuwe koppen zijn.';
+  const b=n.blokkades; const bl=b?[...Object.entries(b.long).map(([c,u])=>`geen long ${c==='*'?'(markt)':c} tot ${new Date(u).toLocaleString('nl-NL',{dateStyle:'short',timeStyle:'short'})}`),...Object.entries(b.short).map(([c,u])=>`geen short ${c==='*'?'(markt)':c} tot ${new Date(u).toLocaleString('nl-NL',{dateStyle:'short',timeStyle:'short'})}`)]:[];
+  $('n-blk').textContent=bl.length?'Actief: '+bl.join(' · '):'';
+  $('n-heads').innerHTML=(n.koppen||[]).slice(0,8).map(k=>`<div>• ${esc(k.title)}</div>`).join('')||'nog geen';
+}
+function segVal(id){const b=[...$(id).children].find(b=>b.classList.contains('sel'));return b&&b.dataset.v}
+['s-bron','s-mode'].forEach(id=>$(id).addEventListener('click',e=>{if(e.target.dataset.v){seg(id,e.target.dataset.v);dirty=true;$('f-replay').hidden=segVal('s-bron')!=='replay'}}));
+
+function fillCfg(c,ex){
+  if(dirty) return;
+  $('i-ex').innerHTML=ex.map(x=>`<option ${x===c.exchange?'selected':''}>${x}</option>`).join('');
+  seg('s-bron',c.bron); seg('s-mode',c.mode); $('f-replay').hidden=c.bron!=='replay';
+  $('i-sym').value=c.symbol_tpl; $('i-dex').innerHTML=(S&&S.data_exchanges||['binance']).map(x=>`<option ${x===c.data_exchange?'selected':''}>${x}</option>`).join('');
+  $('i-fee').value=c.fee_pct; $('i-slip').value=c.slip_pct; $('i-wb').value=c.w_btc; $('i-wl').value=c.w_ls; $('i-wv').value=c.w_vol; $('i-wt').value=(c.w_trend??20); $('i-lev').value=c.lev; $('v-lev').textContent=c.lev; $('i-rem').checked=c.rem; $('i-sysf').checked=c.sysfilter; $('i-stop').value=c.noodstop;
+  renderProfs(c); $('i-tgtr').checked=c.meld_trades; $('i-tguur').value=c.dagrapport_uur; $('i-auto').checked=c.autostart; $('i-rec').value=c.reconcile;
+  $('i-markt').value=c.markt||'futures'; $('i-afr').value=String(c.afromen||0);
+  $('i-news').value=c.nieuws||'uit'; $('i-nmax').value=c.nieuws_max_dag??12; $('i-nbud').value=c.nieuws_budget_eur??2;
+  $('i-ck').placeholder=c.claude_key_ingesteld?'key ingesteld (laat leeg om te houden)':'Claude API key (console.anthropic.com)';
+  $('i-tg').placeholder=c.telegram_token_ingesteld?'token ingesteld (laat leeg om te houden)':'Telegram bot-token';
+  $('i-filt').checked=c.filter; $('i-rp').checked=c.risicopariteit; $('i-cap').value=c.start_capital; $('i-risk').checked=c.risico_akkoord;
+  $('i-rstart').value=c.replay_start; $('i-rspeed').value=c.replay_snelheid;
+  $('i-key').placeholder=c.api_key_ingesteld?'ingesteld (laat leeg om te houden)':'niet ingesteld';
+  $('i-sec').placeholder=c.api_secret_ingesteld?'ingesteld (laat leeg om te houden)':'niet ingesteld';
+  $('i-pass').placeholder=c.api_password_ingesteld?'ingesteld (laat leeg om te houden)':'niet ingesteld';
+}
+document.querySelectorAll('#drawer input,#drawer select').forEach(el=>el.addEventListener('input',()=>{dirty=true;$('v-lev').textContent=$('i-lev').value}));
+
+function drawCurve(curve){
+  const c=$('curve'), dpr=window.devicePixelRatio||1, W=c.clientWidth, H=260;
+  c.width=W*dpr; c.height=H*dpr; const g=c.getContext('2d'); g.scale(dpr,dpr); g.clearRect(0,0,W,H);
+  const css=getComputedStyle(document.documentElement), col=n=>css.getPropertyValue(n).trim();
+  if(!curve||curve.length<2){g.fillStyle=col('--muted');g.font='13px '+col('--sans');g.fillText('De curve verschijnt zodra de bot draait.',12,30);return}
+  const pad={l:64,r:12,t:12,b:24}, n=curve.length;
+  const eq=curve.map(p=>p[1]), pr=curve.map(p=>p[2]);
+  const lo=Math.min(...eq), hi=Math.max(...eq), plo=Math.min(...pr), phi=Math.max(...pr);
+  const x=i=>pad.l+i/(n-1)*(W-pad.l-pad.r);
+  const y=v=>pad.t+(hi-v)/((hi-lo)||1)*(H-pad.t-pad.b);
+  const yp=v=>pad.t+(phi-v)/((phi-plo)||1)*(H-pad.t-pad.b);
+  g.font='11px '+col('--mono'); g.fillStyle=col('--muted'); g.strokeStyle=col('--line'); g.lineWidth=1;
+  for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4, yy=y(v); g.beginPath(); g.moveTo(pad.l,yy); g.lineTo(W-pad.r,yy); g.stroke(); g.textAlign='right'; g.fillText(num(v),pad.l-8,yy+4)}
+  g.textAlign='center'; [0,Math.floor(n/2),n-1].forEach(i=>g.fillText(curve[i][0].slice(0,10),Math.min(Math.max(x(i),pad.l+30),W-40),H-6));
+  g.strokeStyle=col('--price'); g.lineWidth=1.2; g.beginPath(); pr.forEach((v,i)=>i?g.lineTo(x(i),yp(v)):g.moveTo(x(i),yp(v))); g.stroke();
+  const grad=g.createLinearGradient(0,pad.t,0,H-pad.b); grad.addColorStop(0,col('--accent')+'33'); grad.addColorStop(1,col('--accent')+'00');
+  g.fillStyle=grad; g.beginPath(); eq.forEach((v,i)=>i?g.lineTo(x(i),y(v)):g.moveTo(x(i),y(v))); g.lineTo(x(n-1),H-pad.b); g.lineTo(x(0),H-pad.b); g.fill();
+  g.strokeStyle=col('--accent'); g.lineWidth=2; g.beginPath(); eq.forEach((v,i)=>i?g.lineTo(x(i),y(v)):g.moveTo(x(i),y(v))); g.stroke();
+  g.fillStyle=col('--accent'); g.beginPath(); g.arc(x(n-1),y(eq[n-1]),3.5,0,7); g.fill();
+}
+function bars(el,data){
+  if(!data||!data.length){el.innerHTML='<span class="sub" style="padding:8px">Nog geen volle periode</span>';return}
+  const m=Math.max(...data.map(d=>Math.abs(d.r)),0.001);
+  el.innerHTML=data.map(d=>{const h=Math.abs(d.r)/m*50;return `<i title="${d.periode}: ${pct(d.r)}"><b style="height:${h}%;${d.r>=0?`bottom:50%;background:var(--good)`:`top:50%;background:var(--bad)`}"></b></i>`}).join('');
+}
+
+function render(s){
+  if(s.versie) $('versie').textContent='versie '+s.versie;
+  S=s; cfg=s.config; fillCfg(cfg,s.exchanges);
+  const run=s.status==='draait'||s.status==='start...'||s.status==='backtest';
+  $('st-status').textContent=s.status; $('st-status').classList.toggle('on',run);
+  $('st-mode').textContent=cfg.mode==='live'?'LIVE':'paper'; $('st-mode').classList.toggle('live',cfg.mode==='live');
+  $('st-bron').textContent=s.status==='backtest'||(s.backtest&&s.backtest.klaar)?`Backtest · ${s.replay_pos?s.replay_pos.slice(0,16).replace('T',' '):''}`:cfg.bron==='replay'?`Demo · ${s.replay_pos?s.replay_pos.slice(0,16).replace('T',' '):''}`:`koersen ${cfg.data_exchange}${cfg.mode==='live'?' · orders '+cfg.exchange:''}`;
+  $('b-start').hidden=run; $('b-stop').hidden=!run;
+  $('err').hidden=!s.fout; $('err').textContent=s.fout?'Fout: '+s.fout:'';
+  $('intro').hidden=!!s.stats;
+  const pv=(cfg.profielen||{})[cfg.profiel]; const ve=pv?pv.verwacht:null;
+  $('x-wk').textContent=ve?`getest: ${ve.dag} per dag`:''; $('x-mo').textContent=ve?`getest: ${ve.maand}`:''; $('x-dd').textContent=ve?`getest: ${ve.daling}`:'';
+  renderBT(s); renderHealth(s);
+  const st=s.stats;
+  if(st){
+    $('k-eq').textContent=eur(st.equity); $('k-start').textContent='start '+eur(st.start);
+    $('k-ret').textContent=pct(st.rendement); $('k-ret').className=cls(st.rendement);
+    $('k-days').textContent=st.dagen>=1?`${st.dagen.toFixed(0)} dagen`:`${(st.dagen*24).toFixed(0)} uur`;
+    $('k-wk').textContent=pct(st.gem_week); $('k-wk').className=cls(st.gem_week);
+    $('k-mo').textContent=pct(st.gem_maand); $('k-mo').className=cls(st.gem_maand);
+    $('k-dd').textContent=pct(st.max_daling,1);
+    $('k-wr').textContent=st.winrate==null?'–':(st.winrate*100).toFixed(0)+'%'; $('k-tr').textContent=`${st.trades} trades`+(st.trades_per_week?` · ${st.trades_per_week.toFixed(1).replace('.',',')}/week`:'');
+    $('w-sub').textContent=st.pos_weken==null?'':`${(st.pos_weken*100).toFixed(0)}% positief`;
+    $('m-sub').textContent=st.pos_maanden==null?'':`${(st.pos_maanden*100).toFixed(0)}% positief`;
+    bars($('wk'),st.weken); bars($('mo'),st.maanden);
+  }
+  if(s.hefboom_nu!=null){$('k-lev').textContent=(+s.hefboom_nu).toFixed(1).replace('.0','').replace('.',',')+'×'; $('k-reg').textContent=(s.rem&&s.rem.stand!=='normaal'?'noodrem actief · ':'')+(s.trend_boven_sma200?'BTC boven SMA200':'BTC onder SMA200');}
+  $('c-sub').textContent=s.prijs?`BTC ${num(s.prijs)} (grijze lijn)`:'';
+  drawCurve(s.curve);
+  if(s.modules) $('mods').innerHTML=(s.kluis>0?`<div class="mod"><span>Kluis (afgeroomde winst)</span><b>${eur(s.kluis)}</b><span>wordt niet meer gebruikt</span></div>`:'')+s.modules.map(m=>`<div class="mod"><span>${m.naam}</span><b>${eur(m.waarde)}</b><span>${(m.aandeel*100).toFixed(0)}% van totaal · ${m.open} open</span>${m.pauze?`<span class="paused">GEPAUZEERD: ${m.pauze.why}</span><button class="btn" data-resume="${m.key}" style="padding:3px 8px;font-size:12px;justify-self:start">Hervatten</button>`:''}</div>`).join('');
+  if(s.posities) $('t-pos').innerHTML=s.posities.length?s.posities.map(p=>`<tr><td class="name">${p.strat}</td><td style="text-align:left">${p.coin}</td><td style="text-align:left"><span class="chip ${p.side}">${p.side}</span></td><td>${prc(p.entry)}</td><td>${p.stop?prc(p.stop):'–'}</td><td class="${cls(p.pnl)}">${eur(p.pnl)}</td></tr>`).join(''):'<tr><td colspan="6" class="mut">Geen open posities</td></tr>';
+  if(s.trades&&s.trades.length){ $('tr-sub').textContent=`${s.trades.length} laatste`; $('b-more').hidden=s.trades.length<=30; $('b-more').textContent=allTrades?'Toon minder':'Toon alles'; }
+  if(s.trades&&s.trades.length) $('t-tr').innerHTML=(allTrades?s.trades:s.trades.slice(0,30)).map(t=>`<tr><td>${t.t.slice(0,16).replace('T',' ')}</td><td class="name">${t.strat}</td><td style="text-align:left">${t.coin||'BTC'}</td><td><span class="chip ${t.side}">${t.side}</span></td><td>${prc(t.entry)}</td><td>${prc(t.exit)}</td><td class="${cls(t.pnl)}">${eur(t.pnl)}</td><td class="mut">${t.reason}</td></tr>`).join('');
+  $('log').innerHTML=s.logs.map(l=>`<div><time>${l.t}</time><span>${l.m}</span></div>`).join('')||'<span class="sub">Nog leeg</span>';
+}
+
+function renderBT(s){
+  const bt=s.backtest; const busy=s.status==='backtest';
+  $('bt-run').disabled=busy; $('bt-run').textContent=busy?'Bezig…':'Backtest draaien';
+  if(bt){ $('bt-panel').hidden=false; if(!$('bt-from').value){$('bt-from').value=bt.start; $('bt-to').value=bt.end; if(bt.profiel_key) $('bt-prof').value=bt.profiel_key;} }
+  $('bt-bar').hidden=!(bt&&!bt.klaar); if(bt) $('bt-prog').style.width=((bt.voortgang||0)*100).toFixed(1)+'%';
+  $('bt-res').hidden=!(bt&&bt.klaar);
+  if(bt&&bt.klaar&&s.stats){
+    const st=s.stats, h=bt.vasthouden||{};
+    $('r-bot').textContent=pct(bt.rendement,1); $('r-bot').className=cls(bt.rendement);
+    $('r-per').textContent=`${bt.start} t/m ${bt.end} · ${bt.profiel||''} ${bt.lev}×`;
+    $('r-btc').textContent=pct(h.BTC,1); $('r-btc').className=cls(h.BTC);
+    $('r-alt').textContent=`ETH ${pct(h.ETH,1)} · SOL ${pct(h.SOL,1)}`;
+    const d=bt.rendement-(h.BTC||0); $('r-diff').textContent=(d>=0?'+':'')+(d*100).toFixed(1).replace('.',',')+' punt'; $('r-diff').className=cls(d);
+    $('r-dd').textContent=`grootste daling ${pct(st.max_daling,1)} · ${st.trades} trades`;
+    $('r-mods').innerHTML=(s.mod_rend||[]).map((m,i)=>`<tr><td class="name">${m.naam}</td><td class="${cls(m.r)}">${pct(m.r,1)}</td><td>${s.modules&&s.modules[i]?eur(s.modules[i].waarde):'–'}</td></tr>`).join('');
+    $('r-weeks').innerHTML=(st.weken||[]).map(w=>`<tr><td>${w.periode}</td><td class="${cls(w.r)}">${pct(w.r,2)}</td></tr>`).join('');
+  }
+}
+function setTwoMonths(){ $('bt-from').value='2026-08-01'; $('bt-to').value='2026-10-01'; }
+async function poll(){try{render(await api('/api/state'))}catch(e){$('err').hidden=false;$('err').textContent='Geen verbinding met de bot-server. Draait server.py nog?'}}
+setInterval(poll,2000); poll(); window.addEventListener('resize',()=>S&&drawCurve(S.curve));
+
+$('b-start').onclick=async()=>{const r=await api('/api/start',{}); if(!r.ok){$('err').hidden=false;$('err').textContent=r.fout} poll()};
+$('b-more').onclick=()=>{allTrades=!allTrades; S&&render(S)};
+$('b-stop').onclick=async()=>{await api('/api/stop',{}); poll()};
+$('b-bt').onclick=()=>{$('bt-panel').hidden=!$('bt-panel').hidden; if(!$('bt-from').value) setTwoMonths();};
+$('bt-2m').onclick=setTwoMonths;
+$('bt-run').onclick=async()=>{ if(!$('bt-from').value) setTwoMonths();
+  const r=await api('/api/backtest',{start:$('bt-from').value,end:$('bt-to').value,profiel:$('bt-prof').value});
+  if(!r.ok){$('err').hidden=false;$('err').textContent=r.fout} poll()};
+document.addEventListener('click',async e=>{const k=e.target.dataset&&e.target.dataset.resume; if(k){await api('/api/module/'+k+'/hervat',{}); poll();}});
+$('b-hervat').onclick=async()=>{await api('/api/hervat',{}); poll()};
+$('d-tgtest').onclick=async()=>{$('d-msg').textContent='Testbericht versturen…'; const r=await api('/api/test_telegram',{}); $('d-msg').textContent=r.ok?'Verstuurd. Kijk in Telegram.':'Lukt niet: '+r.fout};
+$('d-cktest').onclick=async()=>{$('d-msg').textContent='Claude testen…'; const r=await api('/api/test_claude',{}); $('d-msg').textContent=r.ok?`Werkt. Antwoord: markt ${r.antwoord.markt}, kosten €${r.kosten_eur} (${r.tokens[0]} tokens in, ${r.tokens[1]} uit).`:'Lukt niet: '+r.fout};
+$('d-ckwis').onclick=async()=>{const r=await api('/api/config',{wis_claude:true}); $('d-msg').textContent=r.ok?'Claude key gewist.':r.fout; poll()};
+$('d-tgwis').onclick=async()=>{const r=await api('/api/config',{wis_telegram:true}); $('d-msg').textContent=r.ok?'Telegram gewist.':r.fout; poll()};
+$('b-settings').onclick=()=>$('drawer').classList.add('open');
+$('d-close').onclick=()=>{$('drawer').classList.remove('open');dirty=false};
+$('d-save').onclick=async()=>{
+  const body={bron:segVal('s-bron'),mode:segVal('s-mode'),exchange:$('i-ex').value,symbol_tpl:$('i-sym').value.trim(),data_exchange:$('i-dex').value,fee_pct:+$('i-fee').value,slip_pct:+$('i-slip').value,w_btc:+$('i-wb').value,w_ls:+$('i-wl').value,w_vol:+$('i-wv').value,w_trend:+$('i-wt').value,lev:+$('i-lev').value,profiel:PROF,rem:$('i-rem').checked,sysfilter:$('i-sysf').checked,noodstop:+$('i-stop').value,meld_trades:$('i-tgtr').checked,dagrapport_uur:+$('i-tguur').value,autostart:$('i-auto').checked,reconcile:$('i-rec').value,telegram_token:$('i-tg').value,
+    filter:$('i-filt').checked,risicopariteit:$('i-rp').checked,start_capital:+$('i-cap').value,risico_akkoord:$('i-risk').checked,replay_start:$('i-rstart').value,replay_snelheid:+$('i-rspeed').value,
+    markt:$('i-markt').value,afromen:+$('i-afr').value,api_key:$('i-key').value,api_secret:$('i-sec').value,api_password:$('i-pass').value,nieuws:$('i-news').value,claude_key:$('i-ck').value,nieuws_max_dag:+$('i-nmax').value,nieuws_budget_eur:+$('i-nbud').value};
+  const r=await api('/api/config',body); $('d-msg').textContent=r.ok?'Opgeslagen.':r.fout;
+  if(r.ok){$('i-key').value='';$('i-sec').value='';$('i-pass').value='';$('i-tg').value='';dirty=false;poll()}
+};
+$('d-test').onclick=async()=>{$('d-msg').textContent='Bezig met testen…'; const r=await api('/api/test_key',{});
+  if(!r.ok){$('d-msg').textContent='Lukt niet: '+r.fout;return}
+  const sal=Object.entries(r.saldo||{}).map(([k,v])=>k+' '+v).join(', ')||'leeg';
+  $('d-msg').textContent=(r.spot?'Spot-account. ':'Futures-account. ')+`Werkt. Saldo: ${sal} (vrij USDT/USDC ${r.vrij}). Contracten: ${Object.entries(r.contracten).map(([c,s])=>c+' '+s).join(', ')}.`+((r.waarschuwingen||[]).length?' LET OP: '+r.waarschuwingen.join('; ')+'.':'')};
+$('d-wis').onclick=async()=>{const r=await api('/api/config',{wis_keys:true}); $('d-msg').textContent=r.ok?'Keys gewist.':r.fout; poll()};
+$('d-reset').onclick=async()=>{const r=await api('/api/reset',{}); $('d-msg').textContent=r.ok?'Paper-account gereset.':r.fout; poll()};
+
+let RULES=null, rulesT=0;
+async function loadRules(force){ if(!force && Date.now()-rulesT<30000 && RULES) return; rulesT=Date.now();
+  try{RULES=await api('/api/regels')}catch(e){return}
+  const f=(v,p)=>v==null?'–':(p?(v*100).toFixed(0)+'%':v.toFixed(2));
+  const q=RULES.kwaliteit||[];
+  $('q-body').innerHTML=q.length?q.map(r=>`<tr><td class="name">${esc(r.strat)}</td><td>${r.trades}</td><td>${f(r.winrate,1)}</td><td class="pos">${f(r.gem_winst)}</td><td class="neg">${f(r.gem_verlies)}</td><td class="${r.profit_factor>=1?'pos':'neg'}">${f(r.profit_factor)}</td><td class="${r.totaal>=0?'pos':'neg'}">${r.totaal.toFixed(2)}</td></tr>`).join(''):'<tr><td colspan="7" class="sub">Nog geen afgesloten trades in deze sessie.</td></tr>';
+  $('rules').innerHTML=RULES.regels.map(r=>`<details style="margin:4px 0"><summary><b>${esc(r.strat)}</b> <span class="sub">${esc(r.module)} · ${esc(r.tf)}</span></summary><div class="sub" style="padding:6px 0 6px 14px;line-height:1.5"><b>Instap:</b> ${esc(r.instap)}<br><b>Uit:</b> ${esc(r.uit)}<br><b>Stop:</b> ${esc(r.stop)}<br><b>Grootte:</b> ${esc(r.grootte)}</div></details>`).join('');
+  $('rules-alg').innerHTML=RULES.algemeen.map(x=>`<li>${esc(x)}</li>`).join('');
+}
+async function rapport(){ $('rap-card').hidden=false; $('rap-txt').value='Rapport maken…';
+  const r=await api('/api/rapport'); $('rap-txt').value=r.tekst||('Fout: '+(r.fout||'onbekend'));
+  try{await navigator.clipboard.writeText($('rap-txt').value)}catch(e){$('rap-txt').select(); document.execCommand('copy')}
+  $('rap-card').scrollIntoView({behavior:'smooth'});
+}
+$('b-rap').onclick=rapport;
+$('rap-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('rap-txt').value)}catch(e){$('rap-txt').select();document.execCommand('copy')}};
+$('rap-close').onclick=()=>{$('rap-card').hidden=true};
+setInterval(()=>loadRules(false),5000); loadRules(true);
+</script>
+</body>
+</html>
