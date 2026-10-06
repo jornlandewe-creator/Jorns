@@ -1,5 +1,9 @@
 # Changelog Crypto-Bot
 
+## v15 (6 okt 2026)
+- Fout hersteld uit v14: het profiel-label in de kop las de instellingen voordat ze geladen waren, waardoor de pagina leeg bleef met een
+  onterechte melding "Geen verbinding". Een fout in de pagina wordt nu als zodanig gemeld, los van een verbindingsfout. Getest in een echte browser.
+
 ## v14 (6 okt 2026)
 - Versienummer en actief profiel staan nu in de kop van het dashboard; de pagina wordt nooit meer uit het browsergeheugen geladen.
 - De startbestanden openen de browser pas als de server echt draait (geen "kan geen verbinding maken" meer bij de eerste start).

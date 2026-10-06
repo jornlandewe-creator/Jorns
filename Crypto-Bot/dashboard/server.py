@@ -435,6 +435,10 @@ def index():
     return r
 
 
+@app.get('/favicon.ico')
+def favicon(): return ('', 204)
+
+
 @app.after_request
 def no_cache(r):
     if request.path.startswith('/api/'): r.headers['Cache-Control'] = 'no-store'

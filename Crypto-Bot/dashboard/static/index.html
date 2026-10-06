@@ -450,8 +450,9 @@ function bars(el,data){
 
 function render(s){
   if(s.versie) $('versie').textContent='versie '+s.versie;
-  {const pp=(cfg.profielen||{})[cfg.profiel]; $('prof-now').textContent='profiel: '+(pp?pp.naam:cfg.profiel);}
   S=s; cfg=s.config; fillCfg(cfg,s.exchanges);
+  {const pp=(cfg.profielen||{})[cfg.profiel]; $('prof-now').textContent='profiel: '+(pp?pp.naam:cfg.profiel);}
+  $('err').hidden=true;
   const run=s.status==='draait'||s.status==='start...'||s.status==='backtest';
   $('st-status').textContent=s.status; $('st-status').classList.toggle('on',run);
   $('st-mode').textContent=cfg.mode==='live'?'LIVE':'paper'; $('st-mode').classList.toggle('live',cfg.mode==='live');
@@ -512,7 +513,10 @@ function setYear(){ $('bt-from').value='2026-01-01'; $('bt-to').value='2026-10-0
 function fillBtProfs(c){ const sel=$('bt-prof'); if(sel.options.length) return; const P=c.profielen||{}; const order=['aanbevolen','variant','oud'];
   Object.entries(P).sort((a,b)=>order.indexOf(a[1].groep)-order.indexOf(b[1].groep)).forEach(([k,p])=>{const o=document.createElement('option'); o.value=k; o.textContent=(p.groep==='oud'?'(oud) ':'')+p.naam+' '+p.lev+'×'; sel.appendChild(o)});
   sel.value=c.aanbevolen||'agent_stabiel'; }
-async function poll(){try{render(await api('/api/state'))}catch(e){$('err').hidden=false;$('err').textContent='Geen verbinding met de bot-server. Draait server.py nog?'}}
+async function poll(){
+  let s; try{ s=await api('/api/state'); }catch(e){ $('err').hidden=false; $('err').textContent='Geen verbinding met de bot-server. Draait server.py nog? ('+e+')'; return; }
+  try{ render(s); }catch(e){ console.error(e); $('err').hidden=false; $('err').textContent='Fout in de pagina (stuur dit door): '+(e&&e.stack?e.stack.split('\n').slice(0,2).join(' '):e); }
+}
 setInterval(poll,2000); poll(); window.addEventListener('resize',()=>S&&drawCurve(S.curve));
 
 $('b-start').onclick=async()=>{const r=await api('/api/start',{}); if(!r.ok){$('err').hidden=false;$('err').textContent=r.fout} poll()};
