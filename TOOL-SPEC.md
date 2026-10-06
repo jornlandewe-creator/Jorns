@@ -37,6 +37,14 @@ v10 leverde stills + tagged stills + CSS-motioncontext. v11 voegt toe:
 
 Shot-plan van de preview: establish (hero-clip, dolly-in, focus op CTA) → interaction (macro op menu-knop, klik, pull-back, duik in menuvlak) → detail-sweep (lateral fly-by langs kaarten met echte hover) → depth (orbit rond parallax/scroll-clip) → fly-through (stills als lagen) → brand-resolve (logo-crop uit een still).
 
+## 2g. Nieuw in v20
+
+- Timeline: `polish()` na het bouwen van de shots. Normaliseert de in- en uitvluchtafstand van elk object met `fly` naar één waarde (1500 px × (0.75 + 0.25·energy)), dempt het laatste rustige segment voor de uitvlucht (45%) en streelt richtingswisselingen in ry/rz tussen tussen-keyframes glad. Objecten intro/outro/dev-/travel/stack/fan en `crazy` blijven buiten de rotatie-smoothing.
+- Timeline: `captions` (lijst `{t0, t1, text, sub, pos}`) en `look` (`shadow`, `rim`, `sheen`, `vignette`) in de timeline-uitvoer. Caption-bronnen: `A.headline` (hero-headline of paginatitel), `R.host`, feature-teksten, groep-kind. Per edit-regel `caption: { text, sub, pos } | false`.
+- Engine: `#ground`-laag met grondschaduwen (geprojecteerde bbox van page/lid/phone/crop), rim-overlay per surface (opacity uit de normaal), glasgradient in `lid.extra`/`body.extra`, `#cap`-laag met captions (Inter uit `_assets/fonts`, maskeer-reveal, scrim), achtergrond `mesh`, instelbaar vignet.
+- Render: `grade` (curves + eq) vóór de korrel; `supersample` 1-2 via deviceScaleFactor, terug naar doelresolutie met Lanczos (sharp).
+- Studio: presets pro/clean/hype/insane, tekst-in-beeld, look-sliders, caption per shot, kwaliteit ultra.
+
 ## 2f. Nieuw in v16
 
 - Capture: key features (`lib/extra.js` + `W.features()`): tekstelementen gescoord op aanbod, vertrouwen/reviews, service, cijfers en prijzen, met lettergrootte, positie en groepering naar het omliggende blok (USP-item, stat, reviewkaart). Elk krijgt een eigen screenshot in `features/`. `refeatures.js` doet dit opnieuw voor een bestaande capture.
