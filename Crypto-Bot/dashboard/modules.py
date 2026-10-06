@@ -756,12 +756,12 @@ class AgentModule:
 PROFILES = {
     # Agent (v13): trend-ensemble x hard marktfilter x volatiliteitsdoel op BTC+ETH+SOL. Dagdata 2018 - sep 2026, kosten 0,05% + 0,03% per kant,
     # buiten de steekproef (2023-2026) gecontroleerd. Zie LEESMIJ.md "Agent" en backtest_agent.py (zelfde code als live).
-    'agent':          dict(naam='Agent', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.5), dagstop=0.12,
-                           verwacht=dict(dag='0,12%', maand='+3,7%', jaar='54% (2018-2026; 2023-2026: 43%)', daling='−27%', winrate='35% (actieve maanden 49%)')),
-    'agent_spot':     dict(naam='Agent spot', lev=1.0, brake=None, stop=0.30, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.0), dagstop=0.10,
+    'agent':          dict(naam='Agent', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.5), dagstop=0.25,
+                           verwacht=dict(dag='0,12%', maand='+3,7%', jaar='54% (2018-2026; 2023-2026: 42%)', daling='−27%', winrate='35% (actieve maanden 49%)')),
+    'agent_spot':     dict(naam='Agent spot', lev=1.0, brake=None, stop=0.30, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.0), dagstop=0.20,
                            verwacht=dict(dag='0,11%', maand='+3,3%', jaar='48% (2018-2026; 2023-2026: 36%)', daling='−24%', winrate='35% (actieve maanden 51%)')),
-    'agent_rustig':   dict(naam='Agent rustig', lev=1.0, brake=(0.15, 0.5), stop=0.25, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.0, params=dict(vol_target=0.5)), dagstop=0.08,
-                           verwacht=dict(dag='0,10%', maand='+2,9%', jaar='44% (2018-2026; 2023-2026: 34%)', daling='−23%', winrate='35% (actieve maanden 51%)')),
+    'agent_rustig':   dict(naam='Agent rustig', lev=1.0, brake=(0.15, 0.5), stop=0.25, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.0, params=dict(vol_target=0.5)), dagstop=0.18,
+                           verwacht=dict(dag='0,10%', maand='+2,9%', jaar='39% (2018-2026; 2023-2026: 30%)', daling='−23%', winrate='35% (actieve maanden 51%)')),
     # Echte bot-replays maart 2024 - sep 2026 met vier modules (incl. Trend-long), zie regime/ en results/pt_*_v5.
     #  - verdeling naar risico: aan, maximaal de helft per module
     #  - trendfilter op het hele systeem: uit (kostte in de echte bot veel rendement)

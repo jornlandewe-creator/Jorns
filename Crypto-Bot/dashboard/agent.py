@@ -9,7 +9,7 @@
 
 Fail-safes (allemaal ook actief in het dashboard):
   - noodstop: account X% onder zijn top -> alles dicht, 14 dagen pauze, daarna halve inzet tot een nieuwe top
-  - dagstop: X% verlies binnen 24 uur -> alles dicht, 14 dagen pauze (tegen flash-crashes en fouten)
+  - dagstop: X% verlies binnen 24 uur -> alles dicht, 14 dagen pauze (grens ruim boven gewone crashes: alleen voor rampen en fouten)
   - NOODSTOP-bestand: maak een leeg bestand 'NOODSTOP' in deze map -> alles dicht, pauze tot handmatig hervat
   - verouderde koersen (> 2 uur) of een koerssprong > 25% in een ronde -> die ronde niet handelen
   - fouten (exchange onbereikbaar) -> loggen, wachten, opnieuw; de bewaker herstart het proces als het vastloopt

@@ -41,22 +41,23 @@ niet aan één toevallige instelling. Dubbele kosten kosten 1 procentpunt per ja
 |---|---|---|---|---|---|---|---|---|
 | **Agent** (futures) | 1,5x | **54%** | **-27%** | -13% | 9 | 28% | +100% / -7% | 42% per jaar, daling -27% |
 | Agent spot (geen hefboom) | 1,0x | 48% | -25% | -11% | 10 | 31% | | 36% per jaar, daling -22% |
-| Agent rustig (doel 50%, rem bij -15%) | 1,0x | 40% | -23% | -10% | 10 | 31% | | 30% per jaar, daling -19% |
+| Agent rustig (doel 50%, rem bij -15%) | 1,0x | 39% | -23% | -10% | 10 | 31% | | 30% per jaar, daling -19% |
 | Trend-vasthouden (oud standaardprofiel) | 1,0x | 33% | -62% | -36% | 7 | 25% | +109% / -6% | 37% per jaar, daling -29% |
 | BTC vasthouden | | 24% | -81% | | | | | 55% per jaar, daling -53% |
 
-Per jaar (Agent): 2018 -3%, 2019 +78%, 2020 +232%, 2021 +106%, 2022 0%, 2023 +73%, 2024 +74%, 2025 -2%, 2026 (t/m sep) +24%.
+Per jaar (Agent): 2018 -3%, 2019 +78%, 2020 +232%, 2021 +106%, 2022 0%, 2023 +73%, 2024 +74%, 2025 -3%, 2026 (t/m sep) +27%.
 Positieve maanden: 55% van de maanden waarin de agent in de markt zat (de rest van de tijd staat hij in cash, 0%).
 
 Eerlijk:
 - **De winrate per trade is laag (rond 30%)**, net als bij alle trendvolgers: veel kleine verliezen (gemiddeld -7%), weinig grote winsten
   (gemiddeld rond +100%). Een strategie waarbij de meeste trades winnen (dips kopen) is in de zoektocht geprobeerd: hoge winrate, maar
   over 2018-2023 verlies. Daarom is hier gekozen voor "meestal klein verliezen, soms groot winnen", met de daling als harde grens.
-- **50% per jaar is het gemiddelde over negen jaar, geen belofte.** 2025 was -2%. Sinds 2023 is het 42% per jaar. Twee jaren met bijna
+- **50% per jaar is het gemiddelde over negen jaar, geen belofte.** 2025 was -3%. Sinds 2023 is het 42% per jaar. Twee jaren met bijna
   niets zijn normaal. Begin op papier, en begin daarna klein.
 - De hefboom (1,5x) wordt alleen gebruikt in rustige markten; bij hoge beweeglijkheid zakt de inzet vanzelf onder 1x.
-- **Recente periode**: de echte bot-replay in stappen van 30 minuten over maart 2024 - sep 2026 geeft **15% per jaar met een daling van -24%**
-  (BTC vasthouden in die periode: 13% per jaar, daling -53%; de dagbacktest vanaf dezelfde datum geeft hetzelfde: 14,7%). Die 2,5 jaar waren
+- **Recente periode**: de echte bot-replay in stappen van 30 minuten over maart 2024 - sep 2026 geeft **15% per jaar met een daling van -27%**
+  (BTC vasthouden in die periode: 13% per jaar, daling -53%; de dagbacktest vanaf dezelfde datum geeft hetzelfde: 14,7%; de oude vier-module-profielen
+  haalden in dezelfde replay 21-38% per jaar, maar die zijn op precies deze periode gekozen en dus niet eerlijk vergelijkbaar). Die 2,5 jaar waren
   een zijwaartse markt met scherpe dalingen, het slechtste weer voor trendvolgen. Het gemiddelde van 54% komt vooral uit 2019-2021 en 2023.
   Reken dus niet op 50% elk jaar; reken op een lage daling en op het meepakken van de volgende lange stijging.
 
@@ -64,8 +65,11 @@ Eerlijk:
 Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:
 - **Noodstop**: account 35% onder zijn top (Agent spot 30%, Agent rustig 25%) -> alles dicht, 14 dagen pauze, daarna halve inzet tot een nieuwe top.
   Dit ligt onder de diepste daling uit de test (-27%): hij hoort nooit af te gaan, en als dat wel gebeurt klopt er iets niet.
-- **Dagstop** (nieuw): 12% verlies binnen 24 uur (spot 10%, rustig 8%) -> alles dicht, 14 dagen pauze. Tegen flash-crashes en fouten.
-  Ging in de test één keer af (oktober 2025).
+- **Dagstop** (nieuw): 25% verlies binnen 24 uur (spot 20%, rustig 18%) -> alles dicht, 14 dagen pauze. Bedoeld voor fouten en rampen
+  (exchange-storing, verkeerde orders), niet voor gewone crashes. Geleerd uit de 30-minuten-replay: met een grens van 12% verkocht hij twee keer
+  precies op de bodem van een flash-crash (5 maart 2024, 10 oktober 2025) en miste daarna het herstel: het rendement over 2024-2026 zakte van
+  15% naar 3% per jaar en de daling werd dieper (-31%). Met 25% ging hij in de replay niet af. Een verlieslimiet per dag die vaak afgaat is
+  bij trendvolgen een nadeel, geen bescherming; de bescherming tegen gewone crashes zit in het marktfilter en de krimpende inzet.
 - **NOODSTOP-bestand** (nieuw): maak een leeg bestand `NOODSTOP` in de map `dashboard` en de bot sluit alles en pauzeert tot je in het
   dashboard op Hervatten klikt. Werkt ook als je niet bij het dashboard kunt (bijvoorbeeld via SSH: `touch ~/bot/NOODSTOP`).
 - **Liquidatie-bescherming** bij hefboom: sluiten op 60% van de afstand tot liquidatie.

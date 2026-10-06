@@ -56,7 +56,7 @@ RULES = [
          uit='Onder het 200-daags gemiddelde (BTC of de munt zelf): alles van die munt verkopen. Zakt de koers onder een gemiddelde (min 2%), dan wordt dat deel verkocht. '
              'Stijgt de beweeglijkheid, dan wordt de positie kleiner.',
          stop='Geen vaste stop per trade; het marktfilter en de krimpende inzet bij onrust zijn de bescherming. Bij hefboom: noodstop op 60% van de afstand tot liquidatie. '
-              'Account: noodstop (35% onder de top) en dagstop (12% verlies binnen 24 uur) sluiten alles en pauzeren 14 dagen.',
+              'Account: noodstop (35% onder de top) en dagstop (25% verlies binnen 24 uur, alleen voor rampen en fouten) sluiten alles en pauzeren 14 dagen.',
          grootte='Een derde van de pot per munt (SOL pas na 200 dagen koershistorie); elke maand weer gelijk getrokken. Herbalanceren alleen bij een verschil groter dan 2%.'),
     # ---------------- Trend-vasthouden
     dict(strat='Trend-vasthouden', module='Trend-vasthouden', tf='dag',
