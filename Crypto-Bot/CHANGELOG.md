@@ -1,6 +1,8 @@
 # Changelog Crypto-Bot
 
 ## v13 (6 okt 2026): Agent
+- **Agent plus** (standaardprofiel): Agent long/short + kanteling naar de sterkste munt (56 dagen, x1,25 / x0,75) + 25% extra inzet op een
+  50-daagse top, binnen het plafond. Negen andere strategie-families getest tegen de Agent (onderzoek/agent/other.py): geen verslaat hem.
 - Dashboard: paneel "Regime per munt" (stijgend / dalend / zijwaarts, inzet, beweeglijkheid, reden). Regime-specialisten voor
   zijwaartse markten (dips kopen, pieken shorten) getest en afgewezen: hoge winrate, verlies (onderzoek/agent/regime.py).
 - Standaardprofiel: Agent long/short. Ook onderzocht en afgewezen: 4-uursagent en combinatie dag + 4 uur (onderzoek/agent/h4.py).

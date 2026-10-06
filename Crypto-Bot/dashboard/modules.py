@@ -11,7 +11,7 @@ from library import sma, rsi_mr, supertrend
 from library2 import trades_surge, vol_breakout
 import rotation as RT
 from trader import Trader, FEE, SLIP, FIN_DAY, AGG
-from agent_strategy import AGENT_COINS, AGENT_PARAMS, target_weight, explain, realised_vol
+from agent_strategy import AGENT_COINS, AGENT_PARAMS, target_weight, explain, realised_vol, plus_factor
 
 COINS = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'LINK', 'DOT']
 TF_MIN = {'30m': 30, '1h': 60, '4h': 240, '1d': 1440}
@@ -729,6 +729,9 @@ class AgentModule:
             allow_short = self.shorts and getattr(self, 'allow_short', True)
             w, info = target_weight(dc.close.values, btc.close.values, cap, self.p, shorts=allow_short) if len(dc) else (0.0, dict(reden='geen data'))
             if not can_trade(self, c): w, info = 0.0, dict(reden='niet verhandelbaar op deze exchange')
+            if w > 0 and (self.p.get('tilt') or self.p.get('pyramid')):       # Agent plus: kanteling naar sterkte + pyramide, binnen het plafond
+                f = plus_factor(dc.close.values, {k: dcs[k].close.values for k in elig}, self.p)
+                w = min(w * f, cap); info = dict(info, plus=round(f, 2))
             if w != 0 and not s['pos'] and news_blocked(getattr(self, 'news', None), 'long' if w > 0 else 'short', c, now): w, info = 0.0, dict(reden='nieuwsblokkade')
             self.st['info'][c] = dict(info, w=round(w, 3), dag=day[:10])
             price = feed.price(c); eq = self._eq(c, s, price)
@@ -856,6 +859,11 @@ PROFILES = {
     # buiten de steekproef (2023-2026) gecontroleerd. Zie LEESMIJ.md "Agent" en backtest_agent.py (zelfde code als live).
     # Agent long/short (v13): als Agent, plus shorts (halve grootte) als BTC én de munt onder hun 200-daags gemiddelde staan en het 200-daags
     # gemiddelde van BTC daalt. Alleen futures. Shorts betalen 0,03% per dag. 2018: +18%, 2022: +22% (long-only: -3% en 0%). Zie onderzoek/agent/ls.py.
+    # Agent plus (v13): Agent long/short + kanteling naar de sterkste munt (56 dagen, x1,25 / x0,75) + 25% extra op een 50-daagse top, binnen het plafond.
+    # Beide ingrediënten verbeteren in alle buurinstellingen (onderzoek/agent/other2.py). Dagdata 2018 - sep 2026: zie LEESMIJ.
+    'agent_plus':     dict(naam='Agent plus', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), dagstop=0.25,
+                           agent=dict(cap=1.5, shorts=True, params=dict(tilt=True, pyramid=True)),
+                           verwacht=dict(dag='0,13%', maand='+4,2%', jaar='65% (2018-2026; 2023-2026: 44%)', daling='−31%', winrate='31%')),
     'agent_ls':       dict(naam='Agent long/short', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.5, shorts=True), dagstop=0.25,
                            verwacht=dict(dag='0,12%', maand='+3,8%', jaar='57% (2018-2026; 2023-2026: 39%)', daling='−30%', winrate='31%')),
     'agent':          dict(naam='Agent', lev=1.5, brake=None, stop=0.35, sysfilter=False, weights=(0, 0, 0, 0, 0, 1), agent=dict(cap=1.5), dagstop=0.25,

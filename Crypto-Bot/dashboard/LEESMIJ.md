@@ -11,7 +11,7 @@
 Laat de computer aan staan; de bot handelt alleen terwijl hij draait. Op de Mac houdt het startbestand
 de computer wakker zolang de bot draait.
 
-## Agent (sinds v13; standaardprofiel is Agent long/short, zie verderop)
+## Agent (sinds v13; standaardprofiel is Agent plus, zie verderop)
 
 De bot is nu een **agent**: een programma dat zelfstandig beslist, uitvoert, zichzelf bewaakt en bij gevaar zelf ingrijpt.
 Je kunt hem draaien met het dashboard (`server.py`) of zonder (`python agent.py`, zie onderaan dit hoofdstuk). Beide gebruiken
@@ -89,7 +89,7 @@ Belangrijk: een winrate boven 50% bewijst geen kunde en eronder geen geluk. Wat 
 min (1 - winrate) x gemiddeld verlies. De Agent zonder winstname heeft met 27% winrate een grotere verwachting per trade (+22% van de inzet) dan
 Agent winrate met 66% (+9%). Beide zijn over 2018-2026 en in de controleperiode duidelijk positief; welke je kiest hangt af van wat je volhoudt.
 Veel mensen stoppen met een systeem dat 7 van de 10 keer verliest, ook als het werkt. Kies Agent winrate als je dat herkent; het standaardprofiel is
-Agent long/short (hoogste rendement bij een daling van -30%), dat op een spot-account vanzelf long-only draait.
+Agent plus (Agent long/short met kanteling en pyramide), dat op een spot-account vanzelf long-only draait.
 
 ### Agent long/short (futures): ook verdienen in een bear market
 Als Agent, plus shorts. Een short wordt alleen geopend als drie dingen tegelijk waar zijn: BTC onder zijn 200-daags gemiddelde, de munt onder
@@ -117,6 +117,41 @@ Onderzocht en afgewezen (`onderzoek/agent/ls.py`):
 alle varianten rond nul, omdat de markt dat jaar zijwaarts ging zonder bevestigde trend omhoog of omlaag. Een systeem dat elk jaar 50% belooft
 bestaat niet; wie het wel belooft, heeft het op het verleden afgestemd (zie de hefboom-varianten hierboven: prachtig in de steekproef, mager erbuiten).
 Wat de Agent wel biedt: positief of vlak in de bear-jaren, grote winsten in de bull-jaren, en een daling die nooit dieper kwam dan -30%.
+
+### Andere strategieën, eerlijk getest (`onderzoek/agent/other.py`)
+Alles met dezelfde poort, hetzelfde volatiliteitsdoel en dezelfde kosten als de Agent, op BTC+ETH+SOL (dagdata 2018 - sep 2026):
+
+| Familie | Per jaar | Daling | 2023-2026 | Oordeel |
+|---|---|---|---|---|
+| Agent (referentie) | 54% | -27% | 43% | |
+| Donchian-uitbraak 55/20 (Turtle) | 47% | -22% | 38% | kleinste daling, minder rendement |
+| Donchian 55 + 3 ATR trailing | 49% | -22% | 41% | idem |
+| Weekcandles (10/20/40 weken) | 46% | -41% | 35% | te traag bij omslagen |
+| Sterkste 3 van 10 munten (56 dagen) | 71% | -40% | 69% | hoogste rendement, maar 2019 +8%, 2025 -6%, daling te diep |
+| Volume-bevestiging op de Agent | 31-43% | -20 tot -23% | 23-33% | kost rendement |
+| Kortetermijnmomentum 7/14 dagen | 26-50% | -31 tot -48% | 5-39% | slechter, veel trades |
+| Agent + Donchian gemengd | 51% | -21% | 41% | kleinste daling van alles, iets minder rendement |
+| **Agent + kanteling naar sterkste munt** | **61-69%** | -28 tot -31% | 43-48% | beter in alle 18 buurinstellingen |
+| **Agent + pyramide op nieuwe top** | **58-69%** | -27 tot -32% | 44-52% | beter in alle 12 buurinstellingen |
+| Dips kopen / pieken shorten in zijwaartse markt | -3 tot -33% | | | zie Regime-agent |
+
+### Agent plus (standaardprofiel): Agent long/short met kanteling en pyramide
+Twee toevoegingen die in elke geteste instelling helpen en allebei al lang bekend zijn uit andere markten:
+- **Kanteling naar relatieve sterkte**: de munt met het hoogste rendement over 56 dagen krijgt 1,25x haar inzet, de zwakste 0,75x.
+- **Pyramide**: zolang een munt op een nieuwe 50-daagse top sluit, 25% extra inzet. Bijkopen in kracht, nooit in zwakte.
+Beide blijven binnen het plafond (1,5x futures, 1,0x spot), dus het risico per munt wordt niet groter dan bij de Agent.
+
+| | Per jaar | Grootste daling | 2018 | 2022 | 2025 | Winrate | 2023-2026 (controle) | Sinds maart 2024 |
+|---|---|---|---|---|---|---|---|---|
+| **Agent plus** | **65%** | **-31%** | +21% | +22% | 0% | 31% | 44% per jaar, -28% | 17% per jaar, -28% |
+| Agent long/short | 57% | -30% | +21% | +22% | -3% | 31% | 39% per jaar, -28% | 15% per jaar, -30% |
+| Agent (long-only) | 54% | -27% | 0% | 0% | -3% | 28% | 42% per jaar, -27% | 15% per jaar, -24% |
+
+Per jaar (Agent plus): 2018 +21%, 2019 +73%, 2020 +258%, 2021 +122%, 2022 +22%, 2023 +79%, 2024 +64%, 2025 0%, 2026 (t/m sep) +33%.
+
+Eerlijk: het grootste deel van de winst zit in de sterke jaren 2019-2021 en 2023. In de controleperiode is de verbetering een paar
+procentpunt per jaar, en sinds maart 2024 is er geen verschil met de gewone Agent. Op spot (plafond 1,0x) is het effect klein, omdat
+de inzet daar meestal al aan het plafond zit.
 
 ### Fail-safes (risico en zelfbescherming)
 Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:

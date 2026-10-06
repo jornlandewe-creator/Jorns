@@ -28,7 +28,7 @@ STATE_FILE = os.path.join(HERE, 'state.json')
 KILL_FILE = os.path.join(HERE, 'NOODSTOP')          # maak dit bestand aan (leeg) en de bot sluit alles en pauzeert tot je op Hervatten klikt
 HEARTBEAT_FILE = os.path.join(HERE, 'heartbeat.json')   # elke ronde bijgewerkt; agent.py --check en een externe bewaker lezen dit
 DEFAULT = dict(mode='paper', bron='live', data_exchange='binance', exchange='krakenfutures', symbol_tpl='{c}/USD:USD',
-               profiel='agent_ls', lev=2.0, rem=False, noodstop=40.0, sysfilter=False,
+               profiel='agent_plus', lev=2.0, rem=False, noodstop=40.0, sysfilter=False,
                filter=True, start_capital=1000.0, w_btc=30.0, w_ls=30.0, w_vol=20.0, w_trend=20.0,
                markt='futures', api_key='', api_secret='', api_password='', risico_akkoord=False, replay_start='2024-03-01', replay_snelheid=40,
                fee_pct=0.05, slip_pct=0.03, risicopariteit=True,

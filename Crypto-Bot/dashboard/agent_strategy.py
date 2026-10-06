@@ -15,7 +15,9 @@ import numpy as np, pandas as pd
 
 AGENT_COINS = ('BTC', 'ETH', 'SOL')
 AGENT_PARAMS = dict(looks=(20, 50, 100), band=0.02, gate_n=200, vol_n=30, vol_target=0.60, min_hist=200, reb_thresh=0.02,
-                    short_mult=0.5, short_falling=20)   # shorts (alleen profiel long/short): halve grootte, alleen als het 200-daags gemiddelde van BTC daalt
+                    short_mult=0.5, short_falling=20,   # shorts (alleen profiel long/short): halve grootte, alleen als het 200-daags gemiddelde van BTC daalt
+                    tilt=False, tilt_look=56, tilt_hi=1.25, tilt_lo=0.75,     # Agent plus: inzet kantelen naar de sterkste munt (rendement 56 dagen)
+                    pyramid=False, pyr_look=50, pyr_extra=0.25)             # Agent plus: 25% extra inzet zolang de munt op een 50-daagse top staat
 
 
 def trend_state(close, n, band, prev=None):
@@ -81,3 +83,22 @@ def explain(w, info):
     if info.get('reden') == 'short': return f'short {-w*100:.0f}% (daling {info["ens"]*100:.0f}% x schaal {info["schaal"]:.2f} bij beweeglijkheid {info["vol"]*100:.0f}%)'
     if info.get('reden') != 'trend': return f'cash ({info.get("reden")})'
     return f'{w*100:.0f}% (trend {info["ens"]*100:.0f}% x schaal {info["schaal"]:.2f} bij beweeglijkheid {info["vol"]*100:.0f}%)'
+
+
+def plus_factor(coin_close, all_closes, p=AGENT_PARAMS):
+    """Agent plus: vermenigvuldiger voor de long-inzet. Kanteling naar relatieve sterkte (sterkste munt x tilt_hi, zwakste x tilt_lo)
+    en pyramide (x (1 + pyr_extra) op een nieuwe pyr_look-daagse top). all_closes: dict munt -> dagsloten van de munten die meedoen."""
+    f = 1.0
+    c = np.asarray(coin_close, dtype=float)
+    if p.get('tilt') and len(all_closes) >= 2:
+        look = p['tilt_look']
+        rets = {k: (np.asarray(v, dtype=float)[-1] / np.asarray(v, dtype=float)[-1 - look] - 1) for k, v in all_closes.items() if len(v) > look}
+        if len(rets) >= 2:
+            order = sorted(rets, key=lambda k: -rets[k]); me = c[-1] / c[-1 - look] - 1 if len(c) > look else None
+            if me is not None:
+                rank = sorted(rets.values(), reverse=True).index(me) + 1 if me in rets.values() else None
+                if rank == 1: f *= p['tilt_hi']
+                elif rank == len(rets): f *= p['tilt_lo']
+    if p.get('pyramid') and len(c) >= p['pyr_look'] and c[-1] >= c[-p['pyr_look']:].max():
+        f *= 1 + p['pyr_extra']
+    return f

@@ -28,3 +28,8 @@ volatiliteitsdoel 60% (30 dagen), plafond 1,5x (futures) of 1,0x (spot). Control
               stijgend en trend short in dalend = de Agent long/short. Dips kopen en pieken shorten in zijwaartse markten: winrate 53-61%, maar elke
               variant verliest geld (-3 tot -33%/jr); erbij in de agent kost 5-30 punten rendement en verdubbelt de daling. Crisis-filter
               (beweeglijkheid > x -> cash) kost rendement. Conclusie: in zijwaartse markten is cash de beste specialist.
+9. `other.py` / `other2.py`  Andere families, eerlijk tegen de Agent (zelfde poort, volatiliteitsdoel, kosten): Donchian/Turtle-uitbraken, ATR-trailing,
+              weekcandles, sterkste-munt-rotatie op 10 munten, volume-bevestiging, kortetermijnmomentum, relatieve sterkte, pyramide, combinaties.
+              Geen enkele familie verslaat de Agent op rendement/daling. Twee toevoegingen helpen wel, in alle buurinstellingen: kanteling naar de
+              sterkste munt en 25% extra op een nieuwe 50-daagse top. Dat werd het profiel Agent plus. Rotatie op 10 munten: hoogste rendement
+              (71%/jr) maar daling -40% en 2019 vrijwel nul.
