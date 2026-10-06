@@ -137,6 +137,24 @@ Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:
   leest dit en doet de voorcontroles. Zet dat in cron voor een melding als de bot stil staat.
 - **Live**: elk uur worden de posities vergeleken met de exchange (melden of corrigeren). Telegram-meldingen bij noodrem, pauze, fouten, herstart en dagrapport.
 
+### Regime-agent: wat de agent per marktfase doet (en wat is getest)
+De agent deelt elke dag per munt de markt in en doet per fase iets anders. Het dashboard toont dit onder "Regime per munt".
+
+| Fase | Herkenning | Wat de agent doet |
+|---|---|---|
+| Stijgend | BTC én munt boven 200-daags gemiddelde | Trend volgen, long; inzet via ensemble 20/50/100 en volatiliteitsdoel |
+| Dalend (bevestigd) | BTC én munt onder 200-daags gemiddelde én dat gemiddelde van BTC daalt | Short op halve grootte (profiel long/short, futures) |
+| Zijwaarts / onbevestigd | Alles ertussenin | Cash |
+| Onrustig | Hoge beweeglijkheid | Automatisch kleinere inzet (60% / beweeglijkheid) |
+
+Getest als specialist voor de zijwaartse fase (`onderzoek/agent/regime.py`): dips kopen en pieken shorten (RSI, afstand tot het 10-daags
+gemiddelde, 5-10 dagen vasthouden), op 3 en op 10 munten. Winrate 53-61%, maar **elke variant verliest geld**: -3 tot -13% per jaar long-only,
+-15 tot -33% per jaar met shorts. In de agent erbij: 5 tot 30 procentpunt minder rendement per jaar en een daling van -36 tot -50% in plaats van -27%.
+Een crisis-filter (beweeglijkheid boven een grens -> cash) kostte ook rendement: de beste maanden van een trendvolger zijn juist de onrustige.
+Eerder al gevonden (aanvulling 4, 2-uursdata): dips kopen per 2 uur, winrate 60%, 2018-2023 -8% per jaar.
+Conclusie uit negen jaar data: in crypto wint "vaak een beetje" niet van de kosten; "zelden maar groot" wel. In zijwaartse markten is cash de
+beste specialist. Dat is geen gebrek aan ideeën maar de uitkomst van de meting; alles staat in `onderzoek/agent/` zodat je het zelf kunt nalopen.
+
 ### Ook onderzocht, niet ingebouwd
 - Snellere agent op 4-uursdata (zelfde poort, beslissen elke 4 uur) en een combinatie van dag + 4 uur: 41-53% per jaar, daling -27 tot -32%,
   nooit beter dan de dag-agent (`onderzoek/agent/h4.py`). Sneller beslissen geeft meer kosten en meer heen-en-weer, geen betere uitstap.

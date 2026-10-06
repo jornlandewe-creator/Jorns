@@ -193,6 +193,11 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0}
     <section class="card">
       <h2>Modules</h2>
       <div class="mods" id="mods"><span class="sub">Nog niet gestart</span></div>
+      <h2 style="margin-top:16px">Regime per munt (wat de agent nu doet)</h2>
+      <div class="tbl"><table>
+        <thead><tr><th style="text-align:left">Munt</th><th style="text-align:left">Regime</th><th>Inzet</th><th>Beweeglijkheid</th><th style="text-align:left">Reden</th></tr></thead>
+        <tbody id="t-reg"><tr><td colspan="5" class="mut">Nog niet bekend (na de eerste dagbeslissing)</td></tr></tbody>
+      </table></div>
       <h2 style="margin-top:16px">Open posities</h2>
       <div class="tbl"><table>
         <thead><tr><th>Module</th><th style="text-align:left">Munt</th><th style="text-align:left">Positie</th><th>Instap</th><th>Stop</th><th>Open winst</th></tr></thead>
@@ -466,6 +471,7 @@ function render(s){
   $('c-sub').textContent=s.prijs?`BTC ${num(s.prijs)} (grijze lijn)`:'';
   drawCurve(s.curve);
   if(s.modules) $('mods').innerHTML=(s.kluis>0?`<div class="mod"><span>Kluis (afgeroomde winst)</span><b>${eur(s.kluis)}</b><span>wordt niet meer gebruikt</span></div>`:'')+s.modules.map(m=>`<div class="mod"><span>${m.naam}</span><b>${eur(m.waarde)}</b><span>${(m.aandeel*100).toFixed(0)}% van totaal · ${m.open} open</span>${m.pauze?`<span class="paused">GEPAUZEERD: ${m.pauze.why}</span><button class="btn" data-resume="${m.key}" style="padding:3px 8px;font-size:12px;justify-self:start">Hervatten</button>`:''}</div>`).join('');
+  if(s.regime) $('t-reg').innerHTML=s.regime.length?s.regime.map(r=>`<tr><td style="text-align:left"><b>${r.coin}</b></td><td style="text-align:left">${esc(r.regime)}</td><td class="${r.inzet>0?'pos':(r.inzet<0?'neg':'')}">${(r.inzet*100).toFixed(0)}%</td><td>${r.vol!=null?(r.vol*100).toFixed(0)+'%':'–'}</td><td style="text-align:left" class="sub">${esc(r.uitleg||'')}${r.dag?' · '+r.dag:''}</td></tr>`).join(''):'<tr><td colspan="5" class="mut">Dit profiel heeft geen regime-indeling</td></tr>';
   if(s.posities) $('t-pos').innerHTML=s.posities.length?s.posities.map(p=>`<tr><td class="name">${p.strat}</td><td style="text-align:left">${p.coin}</td><td style="text-align:left"><span class="chip ${p.side}">${p.side}</span></td><td>${prc(p.entry)}</td><td>${p.stop?prc(p.stop):'–'}</td><td class="${cls(p.pnl)}">${eur(p.pnl)}</td></tr>`).join(''):'<tr><td colspan="6" class="mut">Geen open posities</td></tr>';
   if(s.trades&&s.trades.length){ $('tr-sub').textContent=`${s.trades.length} laatste`; $('b-more').hidden=s.trades.length<=30; $('b-more').textContent=allTrades?'Toon minder':'Toon alles'; }
   if(s.trades&&s.trades.length) $('t-tr').innerHTML=(allTrades?s.trades:s.trades.slice(0,30)).map(t=>`<tr><td>${t.t.slice(0,16).replace('T',' ')}</td><td class="name">${t.strat}</td><td style="text-align:left">${t.coin||'BTC'}</td><td><span class="chip ${t.side}">${t.side}</span></td><td>${prc(t.entry)}</td><td>${prc(t.exit)}</td><td class="${cls(t.pnl)}">${eur(t.pnl)}</td><td class="mut">${t.reason}</td></tr>`).join('');

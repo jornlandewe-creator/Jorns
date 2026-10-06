@@ -24,3 +24,7 @@ volatiliteitsdoel 60% (30 dagen), plafond 1,5x (futures) of 1,0x (spot). Control
               Dit werd het profiel Agent long/short (alleen futures).
 7. `h4.py`     Snellere agent op 4-uursdata (zelfde poort) en combinatie dag + 4h: 41-53%/jr, daling -27 tot -32%, nooit beter dan de dag-agent
               (54%/jr, -27%). Sneller beslissen helpt niet; de dag-agent blijft de keuze.
+8. `regime.py` Regime-agent: per dag per munt een regime (stijgend / dalend / zijwaarts / crisis) met per regime een specialist. Trend long in
+              stijgend en trend short in dalend = de Agent long/short. Dips kopen en pieken shorten in zijwaartse markten: winrate 53-61%, maar elke
+              variant verliest geld (-3 tot -33%/jr); erbij in de agent kost 5-30 punten rendement en verdubbelt de daling. Crisis-filter
+              (beweeglijkheid > x -> cash) kost rendement. Conclusie: in zijwaartse markten is cash de beste specialist.

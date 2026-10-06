@@ -452,6 +452,13 @@ def api_state():
                 out['modules'] = [dict(key=m.key, naam=m.name, waarde=round(m.equity(feed), 2), aandeel=m.equity(feed) / tot if tot else 0,
                                        open=len(m.positions(feed)), pauze=meta.get('mod_pause', {}).get(m.key)) for m in sysm.mods]
                 out['posities'] = [dict(p, entry=round(p['entry'], 6), pnl=round(p['pnl'], 2)) for p in sysm.positions(feed)]
+                reg = []
+                for m in sysm.mods:
+                    for c, inf in (getattr(m, 'st', {}).get('info') or {}).items():
+                        r = inf.get('reden', '')
+                        naam = {'trend': 'Stijgend: trend volgen (long)', 'short': 'Dalend (bevestigd): short'}.get(r) or ('Te weinig historie' if 'historie' in r else 'Zijwaarts of onbevestigd: cash')
+                        reg.append(dict(module=m.name, coin=c, regime=naam, inzet=inf.get('w', 0), uitleg=r, dag=inf.get('dag'), vol=inf.get('vol')))
+                out['regime'] = reg
                 tr = sysm.trades(); out['trades'] = tr[-500:][::-1]
                 eqs = meta['equity']; step = max(1, len(eqs) // 1500)
                 out['curve'] = [x[:3] for x in eqs[::step]] + ([eqs[-1][:3]] if eqs and (len(eqs) - 1) % step else [])

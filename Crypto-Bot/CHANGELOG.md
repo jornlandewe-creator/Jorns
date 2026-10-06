@@ -1,6 +1,8 @@
 # Changelog Crypto-Bot
 
 ## v13 (6 okt 2026): Agent
+- Dashboard: paneel "Regime per munt" (stijgend / dalend / zijwaarts, inzet, beweeglijkheid, reden). Regime-specialisten voor
+  zijwaartse markten (dips kopen, pieken shorten) getest en afgewezen: hoge winrate, verlies (onderzoek/agent/regime.py).
 - Standaardprofiel: Agent long/short. Ook onderzocht en afgewezen: 4-uursagent en combinatie dag + 4 uur (onderzoek/agent/h4.py).
 - **Agent long/short** (alleen futures): als Agent plus shorts op halve grootte als BTC en de munt onder hun 200-daags gemiddelde staan en het
   200-daags gemiddelde van BTC daalt. Dagdata 2018 - sep 2026: 57% per jaar, daling -30%, 2018 +21%, 2022 +22%; 2023-2026: 39% per jaar. Shorts betalen 0,03% per dag.
