@@ -131,7 +131,7 @@ format '9:16'|'4:5'|'1:1' (${D.format}) · tempo 0.6-1.6 (${D.tempo}) · energy 
 dof 0-1.6 (${D.dof}) · lift 0-2 (${D.lift}) · hold 0.2-2.2 leestijd (${D.hold}) · ramp 0-1.5 speed ramps + slow-mo op sleutelmomenten (${D.ramp})
 bgStyle studio|mesh|aurora|grid|spotlight|solid (${D.bgStyle}) · bg hex (${D.bg}) · bgParallax 0-2.5 (${D.bgParallax}) · reflection (${D.reflection}) · watermark (${D.watermark}) · cursor (${D.cursor})
 motionBlur 0-1.8 (${D.motionBlur}) · grain 0-2.5 (${D.grain}) · grade 0-1.5 filmische kleurcorrectie, alleen render (${D.grade})
-AFWERKING (v20): polish 0-1 (${D.polish}) gelijke snelheid op elke cut, rust voor de cut, geen zigzag in de draai · shadow 0-1.5 grondschaduw (${D.shadow}) · rim 0-1.5 lichte rand langs vlakken (${D.rim}) · sheen 0-1.5 glans/glas (${D.sheen}) · vignette 0-1 (${D.vignette})
+AFWERKING (v20): polish 0-1 (${D.polish}) rust voor de cut, geen zigzag in de draai · shadow 0-1.5 grondschaduw (${D.shadow}) · rim 0-1.5 lichte rand langs vlakken (${D.rim}) · sheen 0-1.5 glans/glas (${D.sheen}) · vignette 0-1 (${D.vignette})
 AFWERKING EXTRA: drift 0-1.5 levende camera, lichte zweving (${D.drift}) · sweep 0-1.5 lichtstreep per shot (${D.sweep})
 TEKST IN BEELD (v20, standaard uit): captions true|false (${D.captions}) · captionStyle clean|bold (${D.captionStyle}). Automatisch: kop van de site (één keer), feature-teksten, 'Navigatie', 'Mobiel', url op het eind. Per shot in de edit: caption: { text, sub?, pos?: 'bl'|'bc'|'tc' } of caption: false.
 OVERGANG EN APPARAAT: transition mix|whip|zoom|clean (${D.transition}) · device mix|more (meer laptop, telefoon blijft)|laptop (alles in de laptop) (${D.device})

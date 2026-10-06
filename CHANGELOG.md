@@ -1,5 +1,12 @@
 # Changelog
 
+## v20.2
+
+- Fix: bij de feature-carrousel schoof de volgende pagina al in beeld terwijl de vorige er nog stond (pagina's over elkaar). De glide-overgang verkortte de wisselafstand tot 60%; de wissel-keyframes zijn daar nu van uitgezonderd en de afstand wordt uit de echte schermranden berekend. Dit zat ook al in v19.1.
+- Fix: de polish-pass verkortte korte invluchten tot een vaste afstand, waardoor grote pagina's bij de shotstart in beeld konden poppen. Afstanden blijven nu zoals per shot gekozen.
+- Levende camera zit nu in de projectie-wiskunde in plaats van als CSS-transform op de wereld: cursor, klik-ringen en grondschaduwen bewegen exact mee.
+- Grondschaduw zonder blur-filter (vaste zachte gradient): geen her-rastering per frame, dus een vloeiende live preview.
+
 ## v20.1
 
 - Tekst in beeld staat standaard **uit** (`captions: false`). Aanzetten kan onder Look > Tekst in beeld.
@@ -11,7 +18,7 @@
 ## v20.0 · strakker, cleaner, premium
 
 Beweging
-- Polish-pass na het bouwen van de shots (`polish`, standaard 1): elke in- en uitvlucht legt dezelfde afstand af in dezelfde tijd, het laatste rustige stuk voor de cut beweegt 45% minder (het shot landt), en draaiingen die van richting wisselen tussen tussen-keyframes worden gladgestreken.
+- Polish-pass na het bouwen van de shots (`polish`, standaard 1): het laatste rustige stuk voor de cut beweegt minder (het shot landt, alleen als de kadrering gelijk blijft), en draaiingen die van richting wisselen tussen tussen-keyframes worden gladgestreken.
 - Standaardwaarden rustiger: energy 0.7, tilt 0.85, spin 0.55, calm 0.55, hold 1.25, dof 0.9, ramp 0.5.
 - Effecten standaard zachter: burn en leak uit, flash 0.45, glow 0.4, chroma 0.35, lens 0.35, grain 0.35.
 

@@ -43,7 +43,7 @@ Geen API-key nodig. Capture en render draaien als losse processen, dus ze lopen 
 
 De hele look en beweging zijn opnieuw afgewerkt. Standaard staat alles nu op **Pro**: rustig, strak en premium. De oude presets *Clean / Hype / Insane* zijn er nog.
 
-- **Afwerking van de beweging** (slider *Afwerking* bij Camera): elke cut heeft dezelfde snelheid (geen harde en zachte cuts door elkaar), elk shot landt even voordat hij vertrekt, en een draai die heen en weer ging is gladgestreken. Standaard aan.
+- **Afwerking van de beweging** (slider *Afwerking* bij Camera): elk shot landt even voordat hij vertrekt, en een draai die heen en weer ging is gladgestreken. Standaard aan.
 - **Levende camera en lichtstreep**: het beeld zweeft heel licht mee (nooit een stilstaand frame) en per shot trekt één keer een zachte glans over de pagina of het scherm. Sliders *Levende camera* (Camera) en *Lichtstreep per shot* (Look).
 - **Tekst in beeld** (Look > Tekst in beeld, standaard uit): strakke titels in Inter, met een kleine kicker in de merkkleur en een zachte waas eronder. Aan: de kop van de site (één keer), de feature-teksten, *Navigatie*, *Mobiel* en de url als endcard. In het shotpaneel vul je per shot je eigen tekst in, of zet je hem uit. *Bold* = groter.
 - **Betere detectie van key features**: een cijfer-USP is het hele item (getal plus label), nooit de hele rij; dubbele tekst uit draaiende badges wordt samengevoegd.

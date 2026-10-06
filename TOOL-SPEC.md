@@ -39,7 +39,7 @@ Shot-plan van de preview: establish (hero-clip, dolly-in, focus op CTA) → inte
 
 ## 2g. Nieuw in v20
 
-- Timeline: `polish()` na het bouwen van de shots. Normaliseert de in- en uitvluchtafstand van elk object met `fly` naar één waarde (1500 px × (0.75 + 0.25·energy)), dempt het laatste rustige segment voor de uitvlucht (45%) en streelt richtingswisselingen in ry/rz tussen tussen-keyframes glad. Objecten intro/outro/dev-/travel/stack/fan en `crazy` blijven buiten de rotatie-smoothing.
+- Timeline: `polish()` na het bouwen van de shots. Dempt het laatste rustige segment voor de uitvlucht (35%, alleen bij gelijk draaipunt) en streelt richtingswisselingen in ry/rz tussen tussen-keyframes glad. De in- en uitvluchtafstanden blijven zoals per shot gekozen. Objecten intro/outro/dev-/travel/stack/fan en `crazy` blijven buiten de rotatie-smoothing.
 - Timeline: `captions` (lijst `{t0, t1, text, sub, pos}`) en `look` (`shadow`, `rim`, `sheen`, `vignette`) in de timeline-uitvoer. Caption-bronnen: `A.headline` (hero-headline of paginatitel), `R.host`, feature-teksten, groep-kind. Per edit-regel `caption: { text, sub, pos } | false`.
 - Engine: `#ground`-laag met grondschaduwen (geprojecteerde bbox van page/lid/phone/crop), rim-overlay per surface (opacity uit de normaal), glasgradient in `lid.extra`/`body.extra`, `#cap`-laag met captions (Inter uit `_assets/fonts`, maskeer-reveal, scrim), achtergrond `mesh`, instelbaar vignet.
 - Render: `grade` (curves + eq) vóór de korrel; `supersample` 1-2 via deviceScaleFactor, terug naar doelresolutie met Lanczos (sharp).
