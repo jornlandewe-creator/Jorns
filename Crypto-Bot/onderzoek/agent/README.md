@@ -42,3 +42,6 @@ volatiliteitsdoel 60% (30 dagen), plafond 1,5x (futures) of 1,0x (spot). Control
               door bear-market-rally's. Zonder bevestiging (SMA200 hoeft niet te dalen): slechter. Dit werd het keuzeprofiel Agent bear.
 12. `autosel.py` Automatisch elke maand het profiel kiezen met de beste recente prestatie (3/6/12 maanden, op Calmar of rendement): altijd slechter
               dan vast Agent stabiel (diepere daling, 24-45 wissels, minder buiten de steekproef). Daarom geen automatische keuze.
+13. `lev.py`    Hefboomknop (doel en plafond schalen samen) op Agent stabiel, dagdata zonder liquidaties: 1x 41%/-19%, 2x 86%/-36%, 3x 132%/-51%, 4x 173%/-63%.
+              Met de echte bot (4-uursreplay 2020-2026, noodstop en liquidatie-bescherming): 2x 92%/-33%, 3x 94%/-51%, 4x 92%/-66%, 6x 84%/-83%.
+              Boven 2x stijgt het rendement niet meer; de noodstop gaat tientallen keren af op de bodem.

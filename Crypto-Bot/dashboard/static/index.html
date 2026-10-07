@@ -125,16 +125,19 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0}
     <div class="btrow">
       <div><h2>Backtest</h2><p class="sub">De bot rekent een periode door alsof hij toen live draaide. Elke beslissing gebruikt alleen koersen van vóór dat moment.</p></div>
       <div class="btctl">
-        <label class="sub">Van<input type="date" id="bt-from" min="2024-03-01" max="2026-09-30"></label>
-        <label class="sub">Tot<input type="date" id="bt-to" min="2024-03-02" max="2026-10-01"></label>
+        <label class="sub">Van<input type="date" id="bt-from" min="2018-03-01" max="2026-09-30"></label>
+        <label class="sub">Tot<input type="date" id="bt-to" min="2018-03-02" max="2026-10-01"></label>
         <label class="sub">Profiel<select id="bt-prof"></select></label>
-        <button class="btn" id="bt-all">Alles (sinds mrt 2024)</button>
+        <label class="sub">Hefboom<select id="bt-lev"><option value="0">profiel (1,5×)</option><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option><option value="6">6×</option></select></label>
+        <button class="btn" id="bt-2018">Sinds 2018</button>
+        <button class="btn" id="bt-2020">Sinds 2020</button>
+        <button class="btn" id="bt-all">Sinds mrt 2024</button>
         <button class="btn" id="bt-yr">Dit jaar</button>
-        <button class="btn" id="bt-2m">Laatste 2 maanden</button>
+        <button class="btn" id="bt-2m">2 maanden</button>
         <button class="btn primary" id="bt-run">Backtest draaien</button>
       </div>
     </div>
-    <p class="sub">Een periode korter dan een jaar zegt weinig: de agent zit soms maanden in cash en wint zijn geld in een paar sterke maanden. Kijk naar de hele periode en vergelijk met BTC vasthouden. De tabellen in LEESMIJ.md zijn op dagdata 2018 - 2026; hier kan dat pas vanaf maart 2024 (30-minutendata).</p>
+    <p class="sub">Een periode korter dan een jaar zegt weinig: de agent zit soms maanden in cash en wint zijn geld in een paar sterke maanden. Kijk naar de hele periode en vergelijk met BTC vasthouden. Vanaf maart 2024 rekent hij in stappen van 30 minuten; daarvoor (2018 - 2024) in stappen van 4 uur, alleen voor Agent-profielen. Een backtest sinds 2018 duurt een paar minuten.</p>
     <div class="bar" id="bt-bar" hidden><i id="bt-prog"></i></div>
     <div id="bt-res" hidden>
       <div class="btgrid">
@@ -272,7 +275,13 @@ hr{border:0;border-top:1px solid var(--line);margin:4px 0}
   <div class="field"><label>Profiel</label>
     <div class="profs" id="s-prof"></div>
     <small id="prof-note"></small></div>
-  <div class="field" id="f-eigen"><label for="i-lev">Hefboom: <span id="v-lev"></span>×</label><input type="range" id="i-lev" min="1" max="6" step="0.5">
+  <div class="field"><label for="i-hef">Hefboom (plafond op de inzet)</label>
+    <select id="i-hef"><option value="0">Zoals het profiel (Agent: 1,5×, aanbevolen)</option><option value="1">1× (geen hefboom)</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option><option value="6">6×</option></select>
+    <small>Bij de Agent schaalt de hele inzet mee: 3× is twee keer zoveel inzet als 1,5×. Gemeten met de echte bot (stappen van 4 uur, 2020 - sep 2026, met noodstop en liquidatie-bescherming):
+    1× 44% per jaar, daling −16% · 1,5× 68%, −24% · 2× 92%, −33% · 3× 94%, −51% · 4× 92%, −66% · 6× 84%, −83%.
+    Boven 2× stijgt het rendement niet meer en wordt alleen de daling dieper: bij 4× en 6× ging de noodstop 50 keer af en verloor 2025 een kwart tot de helft.
+    Een futures-account is nodig; op spot blijft het 1×.</small></div>
+  <div class="field" id="f-eigen"><label for="i-lev">Hefboom (oude modules): <span id="v-lev"></span>×</label><input type="range" id="i-lev" min="1" max="6" step="0.5">
     <label class="check"><input type="checkbox" id="i-rem"> Noodrem: halve hefboom als de strategie 6% onder haar top zakt</label>
     <label class="check"><input type="checkbox" id="i-sysf"> Trendfilter op alles: halve hefboom als BTC onder zijn 200-daags gemiddelde staat</label>
     <label class="sub">Noodstop (% onder de top, 0 = uit)<input type="number" id="i-stop" min="0" max="90"></label>
@@ -408,7 +417,7 @@ function fillCfg(c,ex){
   $('i-ex').innerHTML=ex.map(x=>`<option ${x===c.exchange?'selected':''}>${x}</option>`).join('');
   seg('s-bron',c.bron); seg('s-mode',c.mode); $('f-replay').hidden=c.bron!=='replay';
   $('i-sym').value=c.symbol_tpl; $('i-dex').innerHTML=(S&&S.data_exchanges||['binance']).map(x=>`<option ${x===c.data_exchange?'selected':''}>${x}</option>`).join('');
-  $('i-fee').value=c.fee_pct; $('i-slip').value=c.slip_pct; $('i-wb').value=c.w_btc; $('i-wl').value=c.w_ls; $('i-wv').value=c.w_vol; $('i-wt').value=(c.w_trend??20); $('i-lev').value=c.lev; $('v-lev').textContent=c.lev; $('i-rem').checked=c.rem; $('i-sysf').checked=c.sysfilter; $('i-stop').value=c.noodstop;
+  $('i-fee').value=c.fee_pct; $('i-slip').value=c.slip_pct; $('i-wb').value=c.w_btc; $('i-wl').value=c.w_ls; $('i-wv').value=c.w_vol; $('i-wt').value=(c.w_trend??20); $('i-lev').value=c.lev; $('v-lev').textContent=c.lev; $('i-hef').value=String(+(c.hefboom||0)); $('i-rem').checked=c.rem; $('i-sysf').checked=c.sysfilter; $('i-stop').value=c.noodstop;
   renderProfs(c); $('i-tgtr').checked=c.meld_trades; $('i-tguur').value=c.dagrapport_uur; $('i-auto').checked=c.autostart; $('i-rec').value=c.reconcile;
   $('i-markt').value=c.markt||'futures'; $('i-afr').value=String(c.afromen||0);
   $('i-news').value=c.nieuws||'uit'; $('i-nmax').value=c.nieuws_max_dag??12; $('i-nbud').value=c.nieuws_budget_eur??2;
@@ -451,7 +460,7 @@ function bars(el,data){
 function render(s){
   if(s.versie) $('versie').textContent='versie '+s.versie;
   S=s; cfg=s.config; fillCfg(cfg,s.exchanges);
-  {const pp=(cfg.profielen||{})[cfg.profiel]; $('prof-now').textContent='profiel: '+(pp?pp.naam:cfg.profiel);}
+  {const pp=(cfg.profielen||{})[cfg.profiel]; const hk=+(cfg.hefboom||0); $('prof-now').textContent='profiel: '+(pp?pp.naam:cfg.profiel)+(hk>0?' · hefboom '+hk+'×':'');}
   $('err').hidden=true;
   const run=s.status==='draait'||s.status==='start...'||s.status==='backtest';
   $('st-status').textContent=s.status; $('st-status').classList.toggle('on',run);
@@ -510,6 +519,8 @@ function renderBT(s){
 function setTwoMonths(){ $('bt-from').value='2026-08-01'; $('bt-to').value='2026-10-01'; }
 function setAll(){ $('bt-from').value='2024-03-01'; $('bt-to').value='2026-10-01'; }
 function setYear(){ $('bt-from').value='2026-01-01'; $('bt-to').value='2026-10-01'; }
+function set2018(){ $('bt-from').value='2018-03-01'; $('bt-to').value='2026-10-01'; }
+function set2020(){ $('bt-from').value='2020-01-01'; $('bt-to').value='2026-10-01'; }
 function fillBtProfs(c){ const sel=$('bt-prof'); if(sel.options.length) return; const P=c.profielen||{}; const order=['aanbevolen','variant','oud'];
   Object.entries(P).sort((a,b)=>order.indexOf(a[1].groep)-order.indexOf(b[1].groep)).forEach(([k,p])=>{const o=document.createElement('option'); o.value=k; o.textContent=(p.groep==='oud'?'(oud) ':'')+p.naam+' '+p.lev+'×'; sel.appendChild(o)});
   sel.value=c.aanbevolen||'agent_stabiel'; }
@@ -523,9 +534,9 @@ $('b-start').onclick=async()=>{const r=await api('/api/start',{}); if(!r.ok){$('
 $('b-more').onclick=()=>{allTrades=!allTrades; S&&render(S)};
 $('b-stop').onclick=async()=>{await api('/api/stop',{}); poll()};
 $('b-bt').onclick=()=>{$('bt-panel').hidden=!$('bt-panel').hidden; if(!$('bt-from').value) setAll();};
-$('bt-2m').onclick=setTwoMonths; $('bt-all').onclick=setAll; $('bt-yr').onclick=setYear;
+$('bt-2m').onclick=setTwoMonths; $('bt-all').onclick=setAll; $('bt-yr').onclick=setYear; $('bt-2018').onclick=set2018; $('bt-2020').onclick=set2020;
 $('bt-run').onclick=async()=>{ if(!$('bt-from').value) setAll();
-  const r=await api('/api/backtest',{start:$('bt-from').value,end:$('bt-to').value,profiel:$('bt-prof').value});
+  const r=await api('/api/backtest',{start:$('bt-from').value,end:$('bt-to').value,profiel:$('bt-prof').value,hefboom:+$('bt-lev').value});
   if(!r.ok){$('err').hidden=false;$('err').textContent=r.fout} poll()};
 document.addEventListener('click',async e=>{const k=e.target.dataset&&e.target.dataset.resume; if(k){await api('/api/module/'+k+'/hervat',{}); poll();}});
 $('b-hervat').onclick=async()=>{await api('/api/hervat',{}); poll()};
@@ -537,7 +548,7 @@ $('d-tgwis').onclick=async()=>{const r=await api('/api/config',{wis_telegram:tru
 $('b-settings').onclick=()=>$('drawer').classList.add('open');
 $('d-close').onclick=()=>{$('drawer').classList.remove('open');dirty=false};
 $('d-save').onclick=async()=>{
-  const body={bron:segVal('s-bron'),mode:segVal('s-mode'),exchange:$('i-ex').value,symbol_tpl:$('i-sym').value.trim(),data_exchange:$('i-dex').value,fee_pct:+$('i-fee').value,slip_pct:+$('i-slip').value,w_btc:+$('i-wb').value,w_ls:+$('i-wl').value,w_vol:+$('i-wv').value,w_trend:+$('i-wt').value,lev:+$('i-lev').value,profiel:PROF,rem:$('i-rem').checked,sysfilter:$('i-sysf').checked,noodstop:+$('i-stop').value,meld_trades:$('i-tgtr').checked,dagrapport_uur:+$('i-tguur').value,autostart:$('i-auto').checked,reconcile:$('i-rec').value,telegram_token:$('i-tg').value,
+  const body={bron:segVal('s-bron'),mode:segVal('s-mode'),exchange:$('i-ex').value,symbol_tpl:$('i-sym').value.trim(),data_exchange:$('i-dex').value,fee_pct:+$('i-fee').value,slip_pct:+$('i-slip').value,w_btc:+$('i-wb').value,w_ls:+$('i-wl').value,w_vol:+$('i-wv').value,w_trend:+$('i-wt').value,lev:+$('i-lev').value,hefboom:+$('i-hef').value,profiel:PROF,rem:$('i-rem').checked,sysfilter:$('i-sysf').checked,noodstop:+$('i-stop').value,meld_trades:$('i-tgtr').checked,dagrapport_uur:+$('i-tguur').value,autostart:$('i-auto').checked,reconcile:$('i-rec').value,telegram_token:$('i-tg').value,
     filter:$('i-filt').checked,risicopariteit:$('i-rp').checked,start_capital:+$('i-cap').value,risico_akkoord:$('i-risk').checked,replay_start:$('i-rstart').value,replay_snelheid:+$('i-rspeed').value,
     markt:$('i-markt').value,afromen:+$('i-afr').value,api_key:$('i-key').value,api_secret:$('i-sec').value,api_password:$('i-pass').value,nieuws:$('i-news').value,claude_key:$('i-ck').value,nieuws_max_dag:+$('i-nmax').value,nieuws_budget_eur:+$('i-nbud').value};
   const r=await api('/api/config',body); $('d-msg').textContent=r.ok?'Opgeslagen.':r.fout;

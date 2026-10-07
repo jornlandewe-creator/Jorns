@@ -14,7 +14,7 @@ import json, os, shutil, threading, time, traceback, collections
 from datetime import datetime, timezone
 import numpy as np, pandas as pd
 from flask import Flask, jsonify, request, send_from_directory
-from modules import System, ReplayFeedMulti, LiveFeedMulti, PaperBrokerMulti, LiveBrokerMulti, PROFILES, COINS
+from modules import System, ReplayFeedMulti, ReplayFeed4h, LiveFeedMulti, PaperBrokerMulti, LiveBrokerMulti, PROFILES, COINS
 from health import Health, check_prices, data_age_minutes, expected_positions, exchange_positions
 from notify import Notifier
 from ai_news import NewsWatch, actions as news_actions
@@ -34,7 +34,7 @@ DEFAULT = dict(mode='paper', bron='live', data_exchange='binance', exchange='kra
                fee_pct=0.05, slip_pct=0.03, risicopariteit=True,
                telegram_token='', telegram_chat='', meld_trades=False, dagrapport_uur=20,
                autostart=True, reconcile='melden', was_actief=False,
-               afromen=0, nieuws='uit', claude_key='', nieuws_max_dag=12, nieuws_budget_eur=2.0, nieuws_interval_min=60)
+               hefboom=0.0, afromen=0, nieuws='uit', claude_key='', nieuws_max_dag=12, nieuws_budget_eur=2.0, nieuws_interval_min=60)
 SECRET = ('api_key', 'api_secret', 'api_password', 'telegram_token', 'claude_key')
 EXCHANGES = ['myokx', 'okx', 'krakenfutures', 'bybit', 'bitget', 'binance', 'kraken', 'bitvavo', 'coinbase']
 DATA_EXCHANGES = ['binance', 'okx', 'bybit', 'kraken']
@@ -45,6 +45,16 @@ RUN = dict(thread=None, stop=threading.Event(), status='gestopt', fout=None, sys
            want=False, cfg=None)
 LOCK = threading.Lock()
 HEALTH = Health()
+
+
+def clean(o):
+    """NaN/inf zijn geen geldige JSON: vervangen door null, anders weigert de browser de hele pagina-update."""
+    if isinstance(o, float): return o if np.isfinite(o) else None
+    if isinstance(o, dict): return {k: clean(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)): return [clean(v) for v in o]
+    if isinstance(o, (np.floating,)): return float(o) if np.isfinite(o) else None
+    if isinstance(o, (np.integer,)): return int(o)
+    return o
 
 
 def log(msg, t=None):
@@ -114,13 +124,30 @@ def profile_build(cfg):
     return w, bool(p.get('scaleout', False)), p.get('hold')
 
 
+AGENT_BASE_LEV = 1.5   # plafond waarop de Agent-profielen zijn getest; de hefboomknop schaalt doel en plafond samen
+
+
+def effective_lev(cfg):
+    """Hefboom die geldt: de knop (cfg['hefboom'] > 0) of anders die van het profiel."""
+    h = float(cfg.get('hefboom') or 0)
+    return h if h > 0 else risk_settings(cfg)[0]
+
+
 def system_kwargs(cfg):
-    """Alle profiel-afhankelijke argumenten voor System in een keer (dashboard en agent.py gebruiken dezelfde)."""
+    """Alle profiel-afhankelijke argumenten voor System in een keer (dashboard en agent.py gebruiken dezelfde).
+    Hefboomknop: bij een Agent-profiel schaalt hij het plafond én het volatiliteitsdoel (1,5x = zoals getest; 3x = dubbele inzet)."""
     p = PROFILES.get(cfg['profiel']) or {}
     lev, brake, stop, sysf = risk_settings(cfg)
     w, scaleout, hold = profile_build(cfg)
+    agent = p.get('agent'); h = float(cfg.get('hefboom') or 0)
+    if h > 0:
+        lev = h
+        if agent:
+            f = h / AGENT_BASE_LEV; params = dict(agent.get('params') or {})
+            params['vol_target'] = params.get('vol_target', 0.6) * f
+            agent = dict(agent, cap=h, params=params)
     return dict(capital=cfg['start_capital'], lev=lev, use_filter=cfg['filter'], weights=w, trend_scaleout=scaleout, hold=hold,
-                agent=p.get('agent'), daystop=p.get('dagstop'), skim=cfg.get('afromen', 0) / 100, risk_parity=cfg['risicopariteit'],
+                agent=agent, daystop=p.get('dagstop'), skim=cfg.get('afromen', 0) / 100, risk_parity=cfg['risicopariteit'],
                 brake=brake, stop=stop, sysfilter=sysf, spot=cfg.get('markt') == 'spot')
 
 
@@ -259,7 +286,7 @@ def worker(cfg):
             feed = LiveFeedMulti(cfg['data_exchange'])
             log(f'Koersen van {cfg["data_exchange"]} (publiek, geen key nodig)')
         RUN['feed'] = feed
-        lev, brake, stop, sysf = risk_settings(cfg)
+        lev, brake, stop, sysf = risk_settings(cfg); lev = effective_lev(cfg)
         sysm = System(log=make_log(feed, cfg), state=state, notify=make_notify(cfg), **system_kwargs(cfg))
         RUN['sys'] = sysm
         if cfg['mode'] == 'live':
@@ -384,9 +411,12 @@ def stats(meta, trades):
 def bt_worker(cfg, start, end):
     """Backtest op maximale snelheid. Alle beslissingen gebruiken alleen data van voor het moment zelf."""
     try:
-        feed = ReplayFeedMulti(os.path.join(HERE, 'data', 'coins'), start, end)
+        if pd.Timestamp(start) < pd.Timestamp('2024-03-01'):
+            feed = ReplayFeed4h(os.path.join(HERE, 'data', 'coins'), start, end)      # voor 2024: stappen van 4 uur (30-minutendata bestaat pas vanaf 2024)
+        else:
+            feed = ReplayFeedMulti(os.path.join(HERE, 'data', 'coins'), start, end)
         RUN['feed'] = feed
-        lev, brake, stop, sysf = risk_settings(cfg)
+        lev, brake, stop, sysf = risk_settings(cfg); lev = effective_lev(cfg)
         sysm = System(log=lambda m: log(m, feed.now()), state=None, **system_kwargs(cfg))
         RUN['sys'] = sysm
         broker = PaperBrokerMulti(cfg['fee_pct'] / 100, cfg['slip_pct'] / 100)
@@ -394,7 +424,7 @@ def bt_worker(cfg, start, end):
         t0 = time.time(); n = feed.end - feed.start_i
         prof = PROFILES.get(cfg['profiel'], {}).get('naam', 'Eigen')
         log(f'Backtest {start} t/m {end}, profiel {prof} ({lev:g}x): gestart')
-        p0 = {c: feed.price(c) for c in ['BTC', 'ETH', 'SOL']}
+        p0 = {c: feed.price(c) for c in ['BTC', 'ETH', 'SOL']}; p0 = {c: p for c, p in p0.items() if p and np.isfinite(p)}   # munt zonder koers op de startdatum (SOL voor 2020): niet vergelijken
         while not RUN['stop'].is_set():
             with LOCK: sysm.step(feed, broker)
             RUN['replay_pos'] = feed.progress()
@@ -417,10 +447,14 @@ def api_backtest():
     cfg = load_cfg()
     if body.get('profiel'): cfg['profiel'] = body['profiel']
     if body.get('lev') and cfg['profiel'] == 'eigen': cfg['lev'] = min(max(float(body['lev']), 1.0), 6.0)
+    if body.get('hefboom') is not None: cfg['hefboom'] = min(max(float(body['hefboom'] or 0), 0.0), 6.0)
     start = body.get('start') or '2024-03-01'; end = body.get('end') or '2026-10-01'
     if pd.Timestamp(end) <= pd.Timestamp(start): return jsonify(ok=False, fout='Einddatum moet na de startdatum liggen')
+    if pd.Timestamp(start) < pd.Timestamp('2018-03-01'): return jsonify(ok=False, fout='Backtest kan vanaf 1 maart 2018 (daarvoor is er geen 200 dagen historie)')
+    if pd.Timestamp(start) < pd.Timestamp('2024-03-01') and not (PROFILES.get(cfg['profiel']) or {}).get('agent'):
+        return jsonify(ok=False, fout='Voor maart 2024 kan alleen met een Agent-profiel (de oude modules hebben 30-minutendata nodig)')
     RUN['stop'].clear(); RUN['sys'] = None; RUN['want'] = False; LOGS.clear()
-    RUN['bt'] = dict(start=start, end=end, lev=risk_settings(cfg)[0], klaar=False, voortgang=0.0, profiel_key=cfg['profiel'])
+    RUN['bt'] = dict(start=start, end=end, lev=effective_lev(cfg), klaar=False, voortgang=0.0, profiel_key=cfg['profiel'], hefboom=cfg.get('hefboom', 0))
     RUN['thread'] = threading.Thread(target=bt_worker, args=(cfg, start, end), daemon=True); RUN['thread'].start()
     RUN['status'] = 'backtest'
     return jsonify(ok=True)
@@ -457,7 +491,7 @@ def api_state():
             try:
                 tot = sysm.equity(feed)
                 out['prijs'] = feed.price('BTC')
-                out['hefboom_nu'] = sysm.lev_now(); out['hefboom_basis'] = sysm.lev; out['kluis'] = round(sysm.meta.get('kluis', 0.0), 2)
+                out['hefboom_nu'] = sysm.lev_now(); out['hefboom_basis'] = sysm.lev; out['hefboom_knop'] = cfg.get('hefboom', 0); out['kluis'] = round(sysm.meta.get('kluis', 0.0), 2)
                 btc = [m for m in sysm.mods if m.key == 'btc']
                 out['trend_boven_sma200'] = btc[0].t.st['regime_up'] if btc else None
                 meta = sysm.meta
@@ -483,7 +517,7 @@ def api_state():
                 out['nieuws']['acties'] = nw.get('log', [])[-5:][::-1]
             except Exception as e:
                 out['fout'] = f'{type(e).__name__}: {e}'
-    return jsonify(out)
+    return jsonify(clean(out))
 
 
 @app.post('/api/start')
@@ -540,7 +574,7 @@ def api_config():
         if new.get(k): c[k] = new[k].strip()
     if new.get('wis_keys'): c['api_key'] = c['api_secret'] = ''
     if new.get('wis_telegram'): c['telegram_token'] = ''; c['telegram_chat'] = ''
-    c['lev'] = min(max(c['lev'], 1.0), 6.0)
+    c['lev'] = min(max(c['lev'], 1.0), 6.0); c['hefboom'] = min(max(float(c.get('hefboom') or 0), 0.0), 6.0)
     if new.get('wis_claude'): c['claude_key'] = ''
     if c['nieuws'] not in ('uit', 'melden', 'beschermen'): c['nieuws'] = 'uit'
     if c['markt'] not in ('futures', 'spot'): c['markt'] = 'futures'

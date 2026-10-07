@@ -1,5 +1,11 @@
 # Changelog Crypto-Bot
 
+## v16 (7 okt 2026)
+- Hefboomknop (Instellingen en backtest-paneel): 1x tot 6x, schaalt bij de Agent de hele inzet. Gemeten met de echte bot 2020-2026:
+  1x 44%/-16%, 1,5x 68%/-24%, 2x 92%/-33%, 3x 94%/-51%, 4x 92%/-66%, 6x 84%/-83%.
+- Backtest in het dashboard vanaf 1 maart 2018 (stappen van 4 uur voor maart 2024), knoppen Sinds 2018 / Sinds 2020.
+- LEESMIJ: hefboomtabel, waarom hoge hefboom met minitrades niet werkt, Claude laten meekijken.
+
 ## v15 (6 okt 2026)
 - Fout hersteld uit v14: het profiel-label in de kop las de instellingen voordat ze geladen waren, waardoor de pagina leeg bleef met een
   onterechte melding "Geen verbinding". Een fout in de pagina wordt nu als zodanig gemeld, los van een verbindingsfout. Getest in een echte browser.

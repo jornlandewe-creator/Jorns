@@ -197,6 +197,48 @@ De bevestiging (het 200-daags gemiddelde van BTC moet dalen) kost rendement in h
 gewone correctie: zonder die eis zakt het rendement buiten de steekproef naar 23% per jaar. Kies zelf: Agent stabiel voor de kleinste
 daling, **Agent bear** als je in bear markets wilt verdienen en een daling van -33% accepteert.
 
+### Hefboomknop: zelf de inzet kiezen
+Instellingen > Hefboom. "Zoals het profiel" is 1,5x (waarop de Agent is getest). Bij een andere stand schaalt de hele inzet mee: het plafond
+én het volatiliteitsdoel. 3x betekent dus twee keer zoveel inzet als 1,5x, in rustige én onrustige markten. Gemeten met de echte bot-code in
+stappen van 4 uur over 2020 - sep 2026, inclusief noodstop (30% onder de top) en liquidatie-bescherming:
+
+| Hefboom | Per jaar | Grootste daling | 2025 | Noodstops | Oordeel |
+|---|---|---|---|---|---|
+| 1x | 44% | -16% | -2% | 0 | rustig, ook voor spot |
+| **1,5x (profiel)** | **68%** | **-24%** | -4% | 0 | aanbevolen |
+| 2x | 92% | -33% | -10% | 6 | hoogste rendement dat nog te dragen is |
+| 3x | 94% | -51% | -22% | 42 | meer risico, geen extra rendement |
+| 4x | 92% | -66% | -49% | 50 | |
+| 6x | 84% | -83% | -25% | 50 | verdient minder dan 2x en verliest bijna alles onderweg |
+
+Waarom 6x minder oplevert dan 2x: na elke scherpe daling sluit de noodstop alles, pauzeert de bot 14 dagen en hervat hij op halve inzet.
+Bij 6x gebeurt dat tientallen keren, steeds op de bodem, en mist hij het herstel. Plus: de liquidatie-bescherming sluit een positie al bij
+-10% vanaf de instap, en dat gebeurt in crypto in één nacht. Hefboom vermenigvuldigt de winst niet; hij vermenigvuldigt de uitslagen,
+en bij uitslagen van -83% is er daarna weinig over om mee te verdienen. Wil je meer dan het profiel: 2x is de grens waar het nog zin heeft.
+
+### Hoge hefboom met kleine "zekere" trades: waarom dat niet kan
+Het idee: 20x tot 100x hefboom, heel kleine koersbewegingen pakken die bijna altijd lukken, en veel van die trades per dag. De rekensom:
+- Kosten per trade zijn 0,05% fee + 0,03% slippage per kant, dus 0,16% per rondje. Bij 50x hefboom is dat 8% van je marge per trade.
+  Een trade moet dus al meer dan 0,16% opleveren om quitte te spelen, hoe hoog de hefboom ook is.
+- Bij 50x hefboom is een beweging van 2% tegen je een liquidatie. Zo'n beweging komt in crypto meerdere keren per week voor, vaak in minuten.
+- "Trades waarvan je zeker weet dat ze lukken" bestaan niet; wat er wel is, is een hoge winrate met kleine winsten en zeldzame grote
+  verliezen. Dat is precies gemeten in dit onderzoek: dips kopen per 2 uur, winrate 60%, 2018-2023 -8% per jaar (zonder hefboom). Met
+  hefboom wordt dat sneller nul. Zie `onderzoek/agent/regime.py` en `winrate.py`.
+- Funding op perpetuals (elke 8 uur) telt bij hoge hefboom ook zwaar mee.
+Kortom: hoge hefboom maakt kosten en verliezen groter, niet de voorsprong. De voorsprong zit in de regels; de hefboom is alleen de volumeknop.
+
+### Backtesten vanaf 2018
+In het dashboard kan de backtest nu vanaf 1 maart 2018 (knoppen Sinds 2018, Sinds 2020). Vanaf maart 2024 rekent hij in stappen van 30
+minuten, daarvoor in stappen van 4 uur (alleen Agent-profielen; de oude modules hebben 30-minutendata nodig). Een backtest sinds 2018 duurt
+een paar minuten. De hefboom kies je in het paneel zelf, los van de instellingen.
+
+### Claude laten meekijken
+Twee manieren, allebei al ingebouwd:
+- **Rapport voor Claude** (knop in de kop): maakt een tekstrapport met instellingen, gezondheid, resultaat, posities, kwaliteit per strategie en
+  het logboek, zonder keys. Plak het in een chat met Claude en vraag wat je wilt weten. Gratis, werkt met je gewone abonnement.
+- **Nieuws met Claude** (Instellingen): de bot leest nieuwsfeeds en vraagt Claude bij belangrijk nieuws om een oordeel; bij "melden en
+  beschermen" sluit hij posities bij een hack of verbod. Daar is een API-key voor nodig (betaal per gebruik, meestal minder dan 0,50 per maand).
+
 ### Fail-safes (risico en zelfbescherming)
 Alle onderstaande regels zijn actief in het dashboard én in `agent.py`:
 - **Noodstop**: account 35% onder zijn top (Agent spot 30%, Agent rustig 25%) -> alles dicht, 14 dagen pauze, daarna halve inzet tot een nieuwe top.

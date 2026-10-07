@@ -79,6 +79,43 @@ class ReplayFeedMulti:
     def progress(self): return self.clock[min(self.i, len(self.clock) - 1)].isoformat()
 
 
+class ReplayFeed4h:
+    """Speelt historie af in stappen van 4 uur (vanaf 2018; de 4h- en dagdata gaan terug tot 2017). Voor de Agent-profielen:
+    die beslissen op dagsloten en bewaken stops per ronde. Modules die 30-minuten- of uurcandles nodig hebben (volume-piek,
+    RSI-dip) krijgen hier geen data en doen dus niets."""
+    def __init__(self, root, start='2018-03-01', end=None):
+        self.d = {}
+        for c in COINS:
+            for tf in ('4h', '1d'):
+                self.d[(c, tf)] = pd.read_csv(os.path.join(root, f'{c}_{tf}.csv.gz'), index_col=0, parse_dates=True)
+        self.clock = self.d[('BTC', '4h')].index
+        self.i = self.clock.searchsorted(pd.Timestamp(start, tz='UTC'))
+        self.end = self.clock.searchsorted(pd.Timestamp(end, tz='UTC')) if end else len(self.clock)
+        self.start_i = self.i; self._cache = {}
+    def step_hours(self): return 4.0
+    def now(self): return self.clock[self.i] + pd.Timedelta(hours=4)
+    def _bar(self, c):
+        df = self.d[(c, '4h')]; t = self.clock[self.i]
+        return df.loc[t] if t in df.index else None
+    def price(self, c='BTC'):
+        b = self._bar(c)
+        if b is not None: return float(b.close)
+        df = self.candles(c, '4h', 5); return float(df.close.iloc[-1]) if len(df) else float('nan')
+    def intrabar(self, c='BTC'):
+        b = self._bar(c); return (float(b.open), float(b.high), float(b.low)) if b is not None else None
+    def candles(self, c, tf, n=400):
+        if tf not in ('4h', '1d'): return pd.DataFrame(columns=['open', 'high', 'low', 'close', 'volume', 'qvol', 'ntrades', 'taker_buy'])
+        key = (c, tf, self.i); hit = self._cache.get(key)
+        if hit is not None and hit[0] >= n: return hit[1].iloc[-n:]
+        df = self.d[(c, tf)]; close_cut = self.now() - pd.Timedelta(minutes=TF_MIN[tf])
+        j = df.index.searchsorted(close_cut, side='right'); out = df.iloc[max(0, j - n):j]
+        if len(self._cache) > 200: self._cache.clear()
+        self._cache[key] = (n, out); return out
+    def advance(self):
+        self.i += 1; return self.i < min(self.end, len(self.clock))
+    def progress(self): return self.clock[min(self.i, len(self.clock) - 1)].isoformat()
+
+
 class LiveFeedMulti:
     """Publieke koersen via ccxt (geen key). Standaard Binance: die levert ook het aantal trades per candle."""
     def __init__(self, exchange_id='binance', quote='USDT'):
