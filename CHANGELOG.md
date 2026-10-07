@@ -2,7 +2,8 @@
 
 ## v21.0 · ring-shots, alleen-dit-shot, pastel
 
-- **Card-ring** (standaard aan): vijf echt gebogen schermen op een cirkelpad, de hele ring draait vloeiend door en zweeft licht, zoals in een motion-graphics-video. Elke kaart is opgebouwd uit tien stroken op een cilinder, dus de buiging is echt en de belichting volgt de ronding. Vijf plekken (midden, links, rechts, uiterst links, uiterst rechts) die je per plek vult met een pagina, de clip van de site of een eigen schermopname (upload via *+ Eigen beeld of video*).
+- **Card-drum** (standaard aan): twee rijen van zes echt gebogen schermen dicht op elkaar om een cilinder, van iets boven bekeken; de drum draait rustig door en zweeft licht, de voorste kaart is iets groter. Elke kaart is opgebouwd uit tien stroken op de cilinder, dus de buiging is echt en de belichting volgt de ronding. Zes plekken in de voorste rij die je per plek vult met een pagina, de clip van de site of een eigen schermopname (upload via *+ Eigen beeld of video*); de achterste rij vult zich met de overige bronnen. `rows: 1` in de edit voor één rij.
+- **Lila-achtergrond**: vaste lichte lila zoals in motion-graphics-referenties (naast *Pastel*, dat uit de merkkleur komt).
 - **Telefoon-ring**: dezelfde ring met vijf telefoons; plekken vul je met mobiele opnames, mobiele schermen of eigen telefoonvideo's.
 - **Alleen dit shot afspelen**: vinkje in het shotpaneel; de preview loopt dan in een lus over alleen dat shot.
 - **Render alleen dit shot**: knop in het shotpaneel; rendert dat ene shot naar een losse MP4 (`..._shot.mp4`) met het geluid op de juiste plek.
