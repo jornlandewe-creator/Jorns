@@ -58,7 +58,7 @@ function listProjects() {
     let url = '';
     try { url = JSON.parse(fs.readFileSync(path.join(dir, 'website-reference-context.json'), 'utf8')).url; } catch (e) {}
     const sdir = path.join(dir, 'showcase');
-    const renders = fs.existsSync(sdir) ? fs.readdirSync(sdir).filter((f) => /^SHOWCASE_.*_\d{8}-\d{6}\.mp4$/.test(f)).sort().reverse() : [];
+    const renders = fs.existsSync(sdir) ? fs.readdirSync(sdir).filter((f) => /^SHOWCASE_.*_\d{8}-\d{6}(_shot)?\.mp4$/.test(f)).sort().reverse() : [];
     return { name: d, url, mtime: fs.statSync(dir).mtimeMs, prepared: fs.existsSync(path.join(sdir, '_assets', 'assets.json')), renders };
   }).sort((a, b) => b.mtime - a.mtime);
 }
@@ -107,13 +107,13 @@ function startCapture(url, opts) {
   return job;
 }
 
-function startRender(name, params, quality) {
+function startRender(name, params, quality, range) {
   const job = newJob('render', name);
   const dir = path.join(OUT, name);
   const settings = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'settings.json'), 'utf8')); } catch (e) { return {}; } })();
   // concept = snel (weinig motion blur), final = volle motion blur, ultra = final + supersampling (1,5x) voor de strakste randen
   const supersample = quality === 'ultra' ? (settings.supersample || 1.5) : 1;
-  renderShowcase(dir, { params, maxSubframes: quality === 'draft' ? 4 : (settings.maxSubframes || 40), supersample, workers: settings.workers, onProgress: (p) => { job.pct = p.pct; job.eta = p.frame > 5 ? Math.round((p.elapsed / p.frame) * (p.total - p.frame)) : null; }, shouldStop: () => job.stop })
+  renderShowcase(dir, { params, range: Array.isArray(range) && range.length === 2 ? [+range[0], +range[1]] : undefined, maxSubframes: quality === 'draft' ? 4 : (settings.maxSubframes || 40), supersample, workers: settings.workers, onProgress: (p) => { job.pct = p.pct; job.eta = p.frame > 5 ? Math.round((p.elapsed / p.frame) * (p.total - p.frame)) : null; }, shouldStop: () => job.stop })
     .then((r) => { job.status = 'done'; job.pct = 100; job.result = { file: path.basename(r.file), url: `/p/${encodeURIComponent(name)}/showcase/${encodeURIComponent(path.basename(r.file))}` }; })
     .catch((e) => { job.status = job.stop ? 'stopped' : 'error'; job.error = e.message; });
   return job;
@@ -219,7 +219,7 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/render' && req.method === 'POST') {
       const b = await body(req);
       if (Object.values(jobs).some((j) => j.kind === 'render' && j.status === 'running')) return json(res, { error: 'Er loopt al een render' }, 409);
-      return json(res, { job: startRender(safeName(b.name), b.params, b.quality).id });
+      return json(res, { job: startRender(safeName(b.name), b.params, b.quality, b.range).id });
     }
     if (p.startsWith('/api/jobs/')) {
       const j = jobs[p.slice(10)];

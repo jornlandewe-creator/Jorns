@@ -1,4 +1,4 @@
-# Website Motion Studio v20
+# Website Motion Studio v21
 
 Plak een link, krijg een cinematic showcase-video van de website. Daarna stel je alles bij met sliders en schakelaars en render je opnieuw.
 
@@ -44,6 +44,7 @@ Geen API-key nodig. Capture en render draaien als losse processen, dus ze lopen 
 De hele look en beweging zijn opnieuw afgewerkt. Standaard staat alles nu op **Pro**: rustig, strak en premium. De oude presets *Clean / Hype / Insane* zijn er nog.
 
 - **Afwerking van de beweging** (slider *Afwerking* bij Camera): elk shot landt even voordat hij vertrekt, en een draai die heen en weer ging is gladgestreken. Standaard aan.
+- **Card-ring en telefoon-ring**: vijf echt gebogen schermen (of vijf telefoons) op een cirkelpad, de ring draait vloeiend door. Per plek kies je een pagina, de clip van de site of je eigen schermopname. In het shotpaneel: *alleen dit shot afspelen* (lus) en *Render alleen dit shot* (losse MP4). Achtergrond *Pastel* past erbij.
 - **Nieuwe shots**: *Pull-back* (stil in macro op het logo, de camera trekt terug tot de hele hero in beeld staat) en *Lange scroll* (de volledige pagina van boven tot onder, de camera rijdt er rustig langs). Beide staan standaard aan. Voor de lange scroll legt de capture de volledige pagina betrouwbaar vast (per scrollstap, aan elkaar geplakt); bij een bestaand project doe je dat met *Features opnieuw zoeken*.
 - **Schoon standaardbeeld**: geen watermerk-logo in de achtergrond, geen spiegeling, geen gloed, geen randlijnen. Alles blijft als optie beschikbaar onder Look en Effecten.
 - **Live preview zonder flikkering**: elk frame wisselt pas als het nieuwe beeld geladen is.

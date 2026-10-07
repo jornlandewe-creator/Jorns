@@ -192,6 +192,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <div class="tab" data-tab="edit">
       <div class="insp" id="framebox" style="display:none">
         <div class="ihead"><b id="fb_name"></b><span class="row" style="gap:6px"><button class="btn sm" id="fb_del" title="Shot uit de video halen">Verwijder</button><button class="btn sm" id="fb_close">Klaar</button></span></div>
+        <div class="row" style="margin-top:8px;gap:10px"><label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="fb_solo"> alleen dit shot afspelen</label><button class="btn sm" id="fb_render" title="Rendert alleen dit shot naar een losse MP4" style="margin-left:auto">Render alleen dit shot</button></div>
         <div class="row" style="margin-top:8px"><span class="muted" style="white-space:nowrap">Soort shot</span><select id="fb_type"></select></div>
         <div id="fb_slots" class="slots"></div>
         <button class="btn primary" id="fb_viewer" style="width:100%;margin-top:12px">Kies uit de hele website…</button>
@@ -223,7 +224,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     </div>
     <div class="tab" data-tab="look" hidden>
       <div class="ctl"><div class="lab">Formaat</div><div class="seg" id="format"><button data-v="9:16">9:16</button><button data-v="4:5">4:5</button><button data-v="1:1">1:1</button></div></div>
-      <div class="ctl"><div class="lab">Achtergrond</div><div class="seg" id="bgStyle"><button data-v="studio">Studio</button><button data-v="mesh">Mesh</button><button data-v="aurora">Aurora</button><button data-v="grid">Grid</button><button data-v="spotlight">Spot</button><button data-v="solid">Vlak</button></div></div>
+      <div class="ctl"><div class="lab">Achtergrond</div><div class="seg" id="bgStyle"><button data-v="studio">Studio</button><button data-v="pastel">Pastel</button><button data-v="mesh">Mesh</button><button data-v="aurora">Aurora</button><button data-v="grid">Grid</button><button data-v="spotlight">Spot</button><button data-v="solid">Vlak</button></div></div>
       <div class="ctl"><div class="lab">Kleur <em id="bgv"></em></div><input type="color" id="bg" style="width:100%;height:30px;border:0;background:none;padding:0"></div>
       <div class="ctl"><div class="lab">Overgangen</div><div class="seg" id="transition"><button data-v="glide">Glide</button><button data-v="mix">Mix</button><button data-v="whip">Whip</button><button data-v="zoom">Zoom</button><button data-v="clean">Clean</button></div></div>
       <div class="ctl"><div class="lab">Apparaat</div><div class="seg" id="device"><button data-v="mix">Mix</button><button data-v="more">Meer laptop</button><button data-v="laptop">Alles laptop</button></div></div>
@@ -281,7 +282,7 @@ const SLIDERS = [
   ['hold', 'Leestijd', 0.2, 2.2, 0.05],
 ];
 const FINISH = [['shadow', 'Grondschaduw', 0, 1.5, 0.05], ['rim', 'Rim light (lichte rand)', 0, 1.5, 0.05], ['sheen', 'Glans en glas', 0, 1.5, 0.05], ['sweep', 'Lichtstreep per shot', 0, 1.5, 0.05], ['vignette', 'Vignet (donkere hoeken)', 0, 1, 0.05], ['bgParallax', 'Achtergrond-parallax', 0, 2.5, 0.05], ['grade', 'Kleurcorrectie (render)', 0, 1.5, 0.05], ['motionBlur', 'Motion blur (render)', 0, 1.8, 0.05], ['grain', 'Filmkorrel (render)', 0, 2.5, 0.1]];
-const SHOTS = [['intro', 'Intro: logo + klik'], ['laptop', 'Laptop'], ['orbit', 'Crazy: orbit om de laptop'], ['phone', 'Telefoon (mobiele site)'], ['spin', 'Crazy: telefoon spin + duik'], ['pagespin', 'Pagina draait om zijn as'], ['pullback', 'Pull-back: van logo naar de hele hero'], ['longscroll', 'Lange scroll door de hele pagina'], ['tracking', 'Tracking close-up langs de kop'], ['rack', 'Rack focus op een feature'], ['crane', 'Crane: van hoog naar ooghoogte'], ['dolly', 'Dolly langs de laptop'], ['float', 'Float: hero zweeft met lagen'], ['phonefan', 'Waaier van drie telefoons'], ['stack', 'Galerij: langs de paginas vliegen'], ['devices', 'Laptop + telefoon'], ['features', 'Key features close-ups'], ['popwall', 'Pop-wall: blokken een voor een los (Apple-stijl)'], ['menu', 'Menu openen'], ['hover', 'Muis volgen over de kaarten'], ['explode', 'Hero-lagen poppen los'], ['cards', 'Kaarten los'], ['travel', 'Vlucht door 3D-ruimte'], ['depth', 'Scroll / parallax'], ['slide', 'Slider'], ['closeup', 'Close-up op een gekozen pagina'], ['outro', 'Outro: logo + CTA']];
+const SHOTS = [['intro', 'Intro: logo + klik'], ['laptop', 'Laptop'], ['orbit', 'Crazy: orbit om de laptop'], ['phone', 'Telefoon (mobiele site)'], ['spin', 'Crazy: telefoon spin + duik'], ['pagespin', 'Pagina draait om zijn as'], ['pullback', 'Pull-back: van logo naar de hele hero'], ['longscroll', 'Lange scroll door de hele pagina'], ['ring', 'Card-ring: 5 gebogen schermen op een cirkelpad'], ['phonering', 'Telefoon-ring: 5 telefoons op een cirkelpad'], ['tracking', 'Tracking close-up langs de kop'], ['rack', 'Rack focus op een feature'], ['crane', 'Crane: van hoog naar ooghoogte'], ['dolly', 'Dolly langs de laptop'], ['float', 'Float: hero zweeft met lagen'], ['phonefan', 'Waaier van drie telefoons'], ['stack', 'Galerij: langs de paginas vliegen'], ['devices', 'Laptop + telefoon'], ['features', 'Key features close-ups'], ['popwall', 'Pop-wall: blokken een voor een los (Apple-stijl)'], ['menu', 'Menu openen'], ['hover', 'Muis volgen over de kaarten'], ['explode', 'Hero-lagen poppen los'], ['cards', 'Kaarten los'], ['travel', 'Vlucht door 3D-ruimte'], ['depth', 'Scroll / parallax'], ['slide', 'Slider'], ['closeup', 'Close-up op een gekozen pagina'], ['outro', 'Outro: logo + CTA']];
 const TOGGLES = [['cursor', 'Cursor en klikjes'], ['watermark', 'Logo in achtergrond'], ['reflection', 'Reflectie onder vlakken']];
 const PRESETS = {
   pro: { burn: false, leak: false, flash: true, flashAmt: 0.3, glow: false, glowAmt: 0.3, chroma: false, chromaAmt: 0.35, lens: false, lensAmt: 0.3, bloom: true, bloomAmt: 0.25, polish: 1, calm: 0.55, ramp: 0.5, tempo: 1, energy: 0.7, tilt: 0.85, spin: 0.55, zoom: 1, dof: 0.9, lift: 1.1, hold: 1.25, motionBlur: 1, grain: 0.3, bgStyle: 'studio', bgParallax: 1, shadow: 0.6, rim: 0, sheen: 0.8, vignette: 0.5, grade: 0.5, captions: false, captionStyle: 'clean', drift: 0.5, sweep: 0.6, watermark: false, reflection: false, transition: 'glide' },
@@ -454,7 +455,7 @@ function layoutFrame() {
   const ifr = $('#player'); ifr.style.width = w + 'px'; ifr.style.height = h + 'px'; ifr.style.transform = `scale(${sc})`;
 }
 window.addEventListener('resize', layoutFrame);
-const SHOTNAMES = { pullback: 'Pull-back', longscroll: 'Scroll', tracking: 'Tracking', rack: 'Rack focus', crane: 'Crane', dolly: 'Dolly', float: 'Float', pagespin: 'Pagina-spin', phonefan: 'Waaier', popwall: 'Pop-wall', spin: 'Spin', orbit: 'Orbit', stack: 'Galerij', phone: 'Telefoon', devices: 'Devices', features: 'Features', intro: 'Intro', laptop: 'Laptop', menu: 'Menu', hover: 'Muis', explode: 'Lagen', cards: 'Kaarten', travel: 'Vlucht', depth: 'Scroll', slide: 'Slider', closeup: 'Close-up', outro: 'Outro' };
+const SHOTNAMES = { ring: 'Ring', phonering: 'Telefoon-ring', pullback: 'Pull-back', longscroll: 'Scroll', tracking: 'Tracking', rack: 'Rack focus', crane: 'Crane', dolly: 'Dolly', float: 'Float', pagespin: 'Pagina-spin', phonefan: 'Waaier', popwall: 'Pop-wall', spin: 'Spin', orbit: 'Orbit', stack: 'Galerij', phone: 'Telefoon', devices: 'Devices', features: 'Features', intro: 'Intro', laptop: 'Laptop', menu: 'Menu', hover: 'Muis', explode: 'Lagen', cards: 'Kaarten', travel: 'Vlucht', depth: 'Scroll', slide: 'Slider', closeup: 'Close-up', outro: 'Outro' };
 // welke edit-regel hoort bij welk shot in de tijdlijn (sommige shots vallen weg als ze niet mogelijk zijn)
 // welk shot in de tijdlijn hoort bij welke regel in de edit (ook als de lengte-instelling shots heeft weggelaten)
 function shotEditIndex() {
@@ -463,7 +464,7 @@ function shotEditIndex() {
   return map;
 }
 function baseEdit() { return (S.params.edit || S.tl.edit || []).map((x) => Object.assign({}, x)); }
-let DRAG = null, FSEL = null;
+let DRAG = null, FSEL = null, SOLO = null;
 let pdActive = () => false;
 // ---- handmatige kadrering per shot ----
 const FB = [['zoom', 'Zoom', 0.6, 1.6, 0.01, 1], ['x', 'Links / rechts', -450, 450, 5, 0], ['y', 'Omhoog / omlaag', -600, 600, 5, 0], ['tilt', 'Draai', -15, 15, 0.5, 0]];
@@ -484,6 +485,8 @@ function selectShot(i) {
   $('#framebox').style.display = 'block'; $('#frameCatch').style.display = 'block';
   FB.forEach(([k]) => { $('#fb_' + k).value = f[k]; $('#fbv_' + k).textContent = (+f[k]).toFixed(k === 'zoom' ? 2 : 0); });
   $('#fb_auto').checked = f.auto !== false;
+  if (SOLO) { SOLO = { start: sh.start, end: sh.end }; seek(sh.start); $('#player').contentWindow.postMessage({ type: 'play' }, '*'); }
+  $('#fb_solo').checked = !!SOLO;
   renderInspector(e, sh);
   $('#framebox').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   drawShots();
@@ -631,7 +634,7 @@ $('#fb_del').addEventListener('click', () => {
   if (k === undefined || ed.length <= 1) return;
   ed.splice(k, 1); S.params.edit = ed; S.params.variation = 0; changed();
 });
-function closeInspector() { FSEL = null; SLOT = null; $('#framebox').style.display = 'none'; $('#frameCatch').style.display = 'none'; drawShots(); }
+function closeInspector() { FSEL = null; SLOT = null; SOLO = null; $('#fb_solo').checked = false; $('#framebox').style.display = 'none'; $('#frameCatch').style.display = 'none'; drawShots(); }
 // ---- viewer: elk deel van elke vastgelegde pagina kiezen, per plek ----
 const VW = { src: null, sources: [], rects: [], max: 1, draw: null, scale: 1, mode: 'auto', area: null, purpose: null };
 function viewerMode(e) {
@@ -826,6 +829,19 @@ function setFrame(ch) {
 $('#fb_auto').addEventListener('change', (ev) => setFrame({ auto: ev.target.checked }));
 $('#fb_reset').addEventListener('click', () => { const e = FSEL !== null && editForShot(FSEL); if (e) { delete e.frame; changed(); selectShot(FSEL); } });
 $('#fb_close').addEventListener('click', closeInspector);
+$('#fb_solo').addEventListener('change', (ev) => {
+  const sh = FSEL !== null && S.tl.shots[FSEL];
+  if (ev.target.checked && sh) { SOLO = { start: sh.start, end: sh.end }; seek(sh.start); $('#player').contentWindow.postMessage({ type: 'play' }, '*'); }
+  else SOLO = null;
+});
+$('#fb_render').addEventListener('click', async () => {
+  const sh = FSEL !== null && S.tl.shots[FSEL]; if (!sh || !S.cur) return;
+  $('#render').disabled = true;
+  const r = await (await fetch('/api/render', { method: 'POST', body: JSON.stringify({ name: S.cur.name, params: S.params, quality: QUALITY, range: [sh.start, sh.end] }) })).json();
+  if (r.error) { alert(r.error); $('#render').disabled = false; return; }
+  jobBox($('#renjob'), 'Renderen: ' + (SHOTNAMES[sh.id] || sh.id), r.job, async (j) => { $('#render').disabled = false; if (j.status === 'done') { await loadProjects(); showRenders(S.cur.name); } });
+  $('#renjob').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
 // slepen en scrollen in de preview
 (() => {
   const fr = $('#frameCatch'); let pd = null; pdActive = () => !!pd;
@@ -922,6 +938,7 @@ window.addEventListener('message', (e) => {
     S.t = m.t; S.dur = m.duration; S.playing = m.playing;
     $('#scrub').value = m.t; $('#time').textContent = `${m.t.toFixed(1)} / ${m.duration.toFixed(1)} s`;
     $('#head').style.left = (m.t / m.duration) * 100 + '%';
+    if (SOLO && m.playing && (m.t >= SOLO.end - 0.03 || m.t < SOLO.start - 0.5)) seek(SOLO.start);
     $('#play').textContent = m.playing ? 'Pauze' : 'Afspelen';
     if (audOn) { if (!m.playing) AUD.pause(); else { if (AUD.paused) AUD.play().catch(() => {}); if (Math.abs(AUD.currentTime - m.t) > 0.12) AUD.currentTime = m.t; } }
   }
