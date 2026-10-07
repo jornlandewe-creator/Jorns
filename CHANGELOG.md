@@ -1,5 +1,16 @@
 # Changelog
 
+## v21.2 · de drum zoals op de referentie
+
+- **Card-drum** (standaard aan, vervangt de ring als standaardshot): een echte cilinder van kaarten, tien per rij, twee rijen, van boven en van dichtbij bekeken met een wijde lens (ca. 61 graden), zoals op de referentie: de voorste kaart groot, de achterste klein, de bovenste boog altijd in beeld. De camera draait eromheen (72 graden), stijgt licht en duwt iets naar binnen. De kaarten zijn tweezijdig: de achterkant toont dezelfde inhoud leesbaar (duplicaten), dus de hele cilinder is gevuld. Bronnen die op zijn herhalen zich. Zelfde plekken als de ring (s0..s5 in de voorste rij). `rows: 1` voor één rij.
+- **Drum-reveal** (aan te vinken): begint vlak op de voorste kaart (vult het beeld), de camera trekt terug en stijgt tot de hele drum draait.
+- **Telefoon-drum** (aan te vinken): twaalf telefoons om een cilinder, zelfde camera; achteraan zie je de achterkanten van de telefoons.
+- **Card-ring (band)** blijft als extra effect (standaard uit).
+- Lens per shot: de drum-shots gebruiken een wijdere lens (`timeline.lens`); de rest van de film houdt de normale lens. De wissel valt altijd op een cut.
+- Gebogen kaarten zonder naadlijntjes: buurstroken liggen om en om een halve pixel naar buiten/binnen zodat ze elkaar nooit snijden (Chromium tekende op snijlijnen een lichte naad), en de overlap is groter.
+- Regie-idee kent: drum, cilinder, drum-reveal, telefoon-drum.
+
+
 ## v21.0 · ring-shots, alleen-dit-shot, pastel
 
 - **Card-drum** (standaard aan): twee rijen van zes echt gebogen schermen dicht op elkaar om een cilinder, van iets boven bekeken; de drum draait rustig door en zweeft licht, de voorste kaart is iets groter. Elke kaart is opgebouwd uit tien stroken op de cilinder, dus de buiging is echt en de belichting volgt de ronding. Zes plekken in de voorste rij die je per plek vult met een pagina, de clip van de site of een eigen schermopname (upload via *+ Eigen beeld of video*); de achterste rij vult zich met de overige bronnen. `rows: 1` in de edit voor één rij.
